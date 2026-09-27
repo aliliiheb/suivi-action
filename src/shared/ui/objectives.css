@@ -1,0 +1,748 @@
+.objectives-shell {
+  background:
+    linear-gradient(hsl(var(--bg) / 0.9), hsl(var(--bg) / 0.93)),
+    url('/art/sanctuary.png') center / cover fixed;
+}
+.objectives-shell .workspace {
+  max-width: 2000px;
+  padding: 16px 18px 32px;
+}
+.objectives-page {
+  padding: 20px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 22px;
+  background: linear-gradient(150deg, hsl(var(--surface) / 0.96), hsl(var(--bg) / 0.96));
+  box-shadow:
+    inset 0 1px 0 #ffffff14,
+    0 18px 50px #0003;
+}
+.objectives-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 24px;
+}
+.objectives-heading h1 {
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+.objectives-heading p {
+  color: hsl(var(--fg-muted));
+  margin-top: 3px;
+  font-size: 14px;
+}
+.objectives-layout {
+  display: grid;
+  gap: 18px;
+  align-items: start;
+}
+.objectives-layout.has-selection {
+  grid-template-columns: minmax(350px, 0.85fr) minmax(500px, 1.25fr);
+}
+.objectives-library {
+  min-width: 0;
+}
+.objective-status-filters,
+.objective-domain-filters,
+.objective-tabs,
+.objective-view-switch {
+  display: flex;
+  gap: 4px;
+}
+.objective-status-filters {
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+}
+.objective-status-filters button,
+.objective-domain-filters button,
+.objective-tabs button,
+.objective-view-switch button {
+  border: 1px solid transparent;
+  background: hsl(var(--surface-2) / 0.55);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: hsl(var(--fg-muted));
+  font-size: 12px;
+  white-space: nowrap;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+.objective-status-filters button span {
+  padding: 1px 4px;
+  margin-inline-start: 4px;
+  background: #8881;
+  border-radius: 3px;
+}
+.objective-status-filters button[aria-pressed='true'],
+.objective-tabs button[aria-pressed='true'],
+.objective-view-switch button[aria-pressed='true'] {
+  background: linear-gradient(125deg, hsl(var(--primary) / 0.24), hsl(var(--primary) / 0.08));
+  color: hsl(var(--fg));
+  border-color: hsl(var(--primary) / 0.65);
+  box-shadow:
+    inset 0 0 9px hsl(var(--primary) / 0.12),
+    0 2px 8px #0002;
+}
+.objective-domain-filters {
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.objective-domain-filters button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px;
+  font-size: 11px;
+  border-color: hsl(var(--border) / 0.6);
+}
+.objective-domain-filters button[aria-pressed='true'] {
+  color: hsl(var(--primary));
+  border-color: hsl(var(--primary) / 0.6);
+}
+.objective-domain-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.objective-type-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: hsl(var(--fg-muted));
+  margin: 0 0 13px;
+}
+.objective-type-filter select {
+  color: hsl(var(--fg));
+  background: hsl(var(--surface));
+  border: 1px solid hsl(var(--border));
+  padding: 5px 8px;
+  border-radius: 6px;
+  max-width: 60%;
+}
+.objective-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px;
+}
+.objective-tile {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  background: hsl(var(--surface));
+  box-shadow: 0 5px 12px #0002;
+  transition:
+    transform 0.2s,
+    border-color 0.2s;
+}
+.objective-tile:hover {
+  transform: translateY(-3px);
+  border-color: hsl(var(--primary) / 0.7);
+}
+.objective-tile[aria-current='page'] {
+  border-color: hsl(var(--primary));
+  box-shadow:
+    0 0 0 1px hsl(var(--primary) / 0.7),
+    0 0 20px hsl(var(--primary) / 0.16);
+}
+.objective-cover {
+  position: relative;
+  height: 118px;
+  overflow: hidden;
+  background: hsl(var(--surface-2));
+}
+.objective-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.objective-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, hsl(var(--surface)), transparent 45%);
+}
+.objective-priority {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 7px;
+  z-index: 1;
+  color: #372408;
+  background: #edc67c;
+  padding: 3px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+}
+.objective-tile-content {
+  padding: 0 10px 11px;
+  position: relative;
+}
+.objective-tile h2 {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0 0 9px;
+  min-height: 36px;
+  overflow-wrap: anywhere;
+}
+.objective-tile-meta,
+.objective-tile-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  font-size: 10px;
+}
+.objective-tile-meta {
+  margin-bottom: 8px;
+}
+.objective-tile-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: hsl(var(--fg-muted));
+  min-width: 0;
+}
+.objective-tile-meta svg,
+.objective-tile-footer svg {
+  flex-shrink: 0;
+}
+.objective-tile .progress-track {
+  height: 5px;
+}
+.objective-tile-footer {
+  flex-wrap: wrap;
+  margin-top: 10px;
+  color: hsl(var(--fg-muted));
+  font-size: 9px;
+}
+.objective-tile-footer span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.objective-tile-footer [data-status='active'],
+.objective-tile-footer [data-status='done'] {
+  color: hsl(var(--success));
+}
+.objective-add-tile {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  border: 1px dashed hsl(var(--primary) / 0.6);
+  border-radius: 12px;
+  padding: 25px 15px;
+  font-size: 13px;
+  background: linear-gradient(150deg, hsl(var(--primary) / 0.06), transparent);
+}
+.objective-add-tile span {
+  width: 100%;
+  font-size: 11px;
+  color: hsl(var(--fg-muted));
+}
+.objective-detail {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 18px;
+  background: linear-gradient(145deg, hsl(var(--surface)), hsl(var(--bg) / 0.95));
+  box-shadow:
+    inset 0 1px 0 #ffffff12,
+    0 12px 30px #0003;
+  gap: 15px;
+}
+.objective-detail .goal-hero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: 0;
+  padding: 8px 0 12px;
+  box-shadow: none;
+}
+.objective-detail .goal-hero-copy {
+  flex: 1;
+  min-width: 0;
+}
+.objective-detail .goal-hero h2 {
+  font-size: 21px;
+  overflow-wrap: anywhere;
+}
+.objective-detail .goal-hero .progress-ring {
+  width: 108px;
+  height: 108px;
+  flex-shrink: 0;
+}
+.objective-detail .progress-ring-value {
+  stroke: #3aca98;
+}
+.objective-detail .hero-meta {
+  padding: 0;
+}
+.objective-emblem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  flex-shrink: 0;
+  border: 1px solid #ecc474;
+  border-radius: 50%;
+  background: radial-gradient(circle, #dba64133, #dba64108);
+  color: #e9bf70;
+  box-shadow:
+    0 0 22px #daa53825,
+    inset 0 0 10px #dda84422;
+}
+.objective-tabs {
+  overflow-x: auto;
+  padding: 0 0 8px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.objective-tabs button {
+  flex: 1;
+  font-size: 11px;
+  padding: 10px 8px;
+}
+.objective-overview {
+  display: grid;
+  gap: 12px;
+}
+.objective-journey {
+  position: relative;
+  min-height: 246px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  color: #f6f4ed;
+  background:
+    linear-gradient(0deg, #06111bf0, #06111b15),
+    url('/art/sanctuary.png') 60% 55% / cover;
+}
+.objective-view-switch {
+  position: relative;
+  z-index: 1;
+  padding: 10px;
+}
+.objective-view-switch button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #eee;
+  background: #06111bd4;
+  font-size: 10px;
+}
+.objective-view-switch button[aria-pressed='true'] {
+  color: #fff;
+  background: #564227df;
+  border-color: #c9a964;
+}
+.objective-path-scroll {
+  overflow-x: auto;
+}
+.objective-path {
+  min-height: 192px;
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  padding: 12px 12px 18px;
+  position: relative;
+}
+.objective-path svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 150px;
+  overflow: visible;
+}
+.objective-path svg path {
+  fill: none;
+  stroke: #f1d08c;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 4px #ffc960);
+}
+.objective-milestone {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 110px;
+  gap: 4px;
+  text-shadow: 0 2px 3px #000;
+}
+.objective-milestone > span {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid #a1bbb8;
+  background: #0c202ceb;
+  font-size: 19px;
+  box-shadow: 0 0 15px #091823;
+}
+.objective-milestone strong {
+  font-size: 11px;
+  max-width: 110px;
+  overflow-wrap: anywhere;
+}
+.objective-milestone small {
+  font-size: 12px;
+}
+.objective-milestone[data-complete='true'] > span {
+  border-color: #4fd3a3;
+  background: #0d7157;
+  box-shadow: 0 0 18px #44ca9766;
+}
+.objective-milestone[data-current='true'] > span {
+  border-color: #f4d088;
+  background: #916c27;
+  box-shadow: 0 0 22px #f1c25c88;
+}
+.objective-milestone[data-current='true'] small {
+  color: #ffd983;
+}
+.objective-path-empty {
+  position: relative;
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 7px;
+  padding: 0 15px;
+}
+.objective-path-empty h3 {
+  font-size: 18px;
+}
+.objective-path-empty p {
+  font-size: 12px;
+}
+.objective-path-empty svg {
+  position: static;
+  width: 26px;
+  height: 26px;
+  color: #ebc476;
+}
+.objective-journey-list {
+  position: relative;
+  margin: 0 10px 10px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #06111bdb;
+  display: grid;
+  gap: 12px;
+  min-height: 170px;
+  align-content: start;
+}
+.objective-journey-list button {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: start;
+  font-size: 12px;
+}
+.objective-journey-list p {
+  font-size: 13px;
+}
+.objective-next-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 10px;
+}
+.objective-panel {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid hsl(var(--border) / 0.75);
+  border-radius: 11px;
+  background: linear-gradient(130deg, hsl(var(--surface-2) / 0.6), hsl(var(--surface) / 0.5));
+  box-shadow: inset 0 1px 0 #ffffff05;
+}
+.objective-panel h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+.objective-panel h3 svg {
+  color: hsl(var(--primary));
+}
+.objective-panel p,
+.objective-panel small {
+  color: hsl(var(--fg-muted));
+  font-size: 12px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.objective-next p {
+  margin-bottom: 10px;
+}
+.objective-next .ui-button {
+  width: 100%;
+  margin-top: 10px;
+  font-size: 11px;
+  min-height: 32px;
+}
+.objective-big-number {
+  display: block;
+  font-size: 24px;
+  margin: 14px 0 5px;
+}
+.objective-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.objective-stat {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px;
+  margin: 11px 0;
+  font-size: 11px;
+}
+.objective-stat > span {
+  color: hsl(var(--fg-muted));
+}
+.objective-stat .progress-track {
+  height: 4px;
+}
+.objective-text-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: start;
+  width: 100%;
+  font-size: 11px;
+  color: hsl(var(--primary));
+  padding: 8px 0;
+}
+.objective-purpose p {
+  white-space: pre-wrap;
+  max-height: 140px;
+  overflow: auto;
+}
+.objective-purpose > button {
+  width: 100%;
+  height: 95px;
+  margin-top: 12px;
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  border-radius: 8px;
+  padding: 10px;
+  background-size: cover;
+  background-position: center;
+  font-size: 11px;
+  color: #fff;
+}
+.objective-detail .goal-sections {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+.objective-detail [hidden] {
+  display: none !important;
+}
+.objective-detail .goal-stages {
+  grid-column: auto;
+}
+.objective-detail .goal-metrics {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.objective-notes form {
+  display: grid;
+  gap: 12px;
+}
+.objective-notes label {
+  font-size: 12px;
+  margin-top: 14px;
+}
+.objective-notes textarea {
+  resize: vertical;
+  width: 100%;
+  background: hsl(var(--surface));
+  color: hsl(var(--fg));
+  border: 1px solid hsl(var(--border));
+  padding: 12px;
+  border-radius: 8px;
+}
+.objective-notes ul a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-wrap: anywhere;
+  color: hsl(var(--primary));
+  font-size: 12px;
+  padding: 10px 0;
+}
+.objective-habits a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 0;
+  font-size: 13px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.objective-no-match {
+  padding: 25px 0;
+  color: hsl(var(--fg-muted));
+  text-align: center;
+}
+.objectives-page :is(button, a, select, textarea):focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 3px;
+}
+@media (min-width: 1700px) {
+  .objective-cover {
+    height: 145px;
+  }
+  .objective-tile h2 {
+    font-size: 14px;
+  }
+  .objective-tile-footer {
+    font-size: 10px;
+  }
+  .objective-detail {
+    padding: 20px;
+  }
+  .objective-journey {
+    min-height: 280px;
+  }
+  .objective-path {
+    min-height: 220px;
+  }
+}
+@media (max-width: 1250px) {
+  .objectives-layout.has-selection {
+    grid-template-columns: minmax(270px, 0.65fr) minmax(450px, 1.15fr);
+  }
+  .objective-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .objective-emblem {
+    display: none;
+  }
+  .objective-next-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .objective-next {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 1000px) {
+  .objectives-layout.has-selection {
+    grid-template-columns: 1fr;
+  }
+  .objective-gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .objectives-library {
+    order: 1;
+  }
+  .objective-detail {
+    order: 0;
+  }
+  .objective-detail .goal-hero {
+    gap: 16px;
+  }
+  .objective-emblem {
+    display: flex;
+  }
+}
+@media (max-width: 600px) {
+  .objectives-shell .workspace {
+    padding: 8px;
+  }
+  .objectives-page {
+    padding: 12px;
+    border-radius: 14px;
+  }
+  .objectives-heading {
+    align-items: start;
+    gap: 10px;
+  }
+  .objectives-heading h1 {
+    font-size: 24px;
+  }
+  .objectives-heading p {
+    font-size: 12px;
+  }
+  .objectives-heading .ui-button {
+    font-size: 11px;
+    padding: 8px;
+  }
+  .objective-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .objective-detail {
+    padding: 12px;
+  }
+  .objective-emblem {
+    display: none;
+  }
+  .objective-detail .goal-hero {
+    flex-wrap: wrap;
+  }
+  .objective-detail .goal-hero .progress-ring {
+    width: 80px;
+    height: 80px;
+  }
+  .objective-detail .goal-hero-copy {
+    flex-basis: 100%;
+  }
+  .objective-summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .objective-detail .goal-hero h2 {
+    font-size: 18px;
+  }
+}
+.objective-detail .goal-hero-copy > div:first-child h2 {
+  flex: 1;
+  min-width: 160px;
+}
+.objective-detail .goal-hero .hero-meta {
+  margin-bottom: 0;
+}
+.objective-tile h2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  height: 36px;
+}
+[dir='rtl'] .objective-path > svg {
+  transform: scaleX(-1);
+}
+
+.objective-cover img {
+  height: 150%;
+  object-position: center 30%;
+}
+.objective-status-select {
+  margin-top: 8px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 5px;
+  background: hsl(var(--surface));
+  color: hsl(var(--success));
+  font-size: 11px;
+  padding: 3px 7px;
+}

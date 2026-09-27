@@ -1,0 +1,1036 @@
+/* Illustrated workspaces share the existing theme tokens and accessible controls. */
+.workspace:has(.atelier-page) {
+  max-width: 1900px;
+  width: 100%;
+  padding: 18px 20px 28px;
+}
+.app-shell:has(.atelier-page) {
+  background:
+    linear-gradient(100deg, rgba(2, 14, 22, 0.95), rgba(5, 16, 24, 0.82)),
+    url('/art/garden-courtyard.png') center/cover fixed;
+}
+.atelier-page {
+  --atelier-gold: #e6bf73;
+  --atelier-panel: linear-gradient(135deg, rgba(12, 32, 45, 0.96), rgba(2, 20, 29, 0.97));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: #e9eef2;
+  min-width: 0;
+}
+.atelier-page > * {
+  min-width: 0;
+}
+.atelier-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.atelier-title h1 {
+  font-size: clamp(26px, 2.6vw, 38px);
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+.atelier-title p {
+  margin-top: 7px;
+  color: #b9c9d3;
+  font-size: 14px;
+}
+.atelier-title .atelier-quote {
+  max-width: 360px;
+}
+.atelier-three {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(340px, 1.8fr) minmax(230px, 1fr);
+  gap: 13px;
+  align-items: start;
+}
+.notes-composition {
+  grid-template-columns: minmax(185px, 0.7fr) minmax(400px, 2fr) minmax(225px, 0.85fr);
+}
+.atelier-stack {
+  display: grid;
+  gap: 13px;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+.atelier-panel {
+  border: 1px solid #9ea8af30;
+  background: var(--atelier-panel);
+  box-shadow:
+    inset 0 1px 0 #e0eeff0c,
+    0 5px 16px #0003;
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.atelier-panel > header {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.atelier-panel h2 {
+  font-size: 14px;
+  font-weight: 650;
+}
+.atelier-panel h2::before {
+  content: '✦';
+  color: var(--atelier-gold);
+  margin-inline-end: 8px;
+}
+.atelier-panel header > a,
+.atelier-link {
+  font-size: 12px;
+  color: #6ec6e7;
+}
+.atelier-panel p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #adbdc7;
+  margin: 9px 0;
+}
+.atelier-panel h3 {
+  font-size: 13px;
+  margin: 16px 0 9px;
+}
+.atelier-panel small {
+  color: #a8bac8;
+  font-size: 11px;
+}
+.atelier-panel input,
+.atelier-panel textarea,
+.atelier-panel select {
+  color: inherit;
+}
+.atelier-panel .surface {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+.atelier-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.atelier-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #a1b1bc24;
+  background: #031723b3;
+  border-radius: 9px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.atelier-tabs button,
+.atelier-tabs a {
+  font-size: 12px;
+  min-height: 34px;
+  padding: 8px 13px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.atelier-tabs [aria-pressed='true'],
+.atelier-tabs a:hover {
+  background: linear-gradient(120deg, #9f793c7a, #e6bf7329);
+  border-color: #e6bf7380;
+  box-shadow: 0 0 9px #f8c76935;
+  color: #ffe3a9;
+}
+.atelier-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 180px;
+  flex: 0 1 330px;
+  padding: 8px 12px;
+  border: 1px solid #b6cddd2c;
+  background: #0b2331;
+  border-radius: 9px;
+}
+.atelier-search input {
+  background: transparent;
+  outline: none;
+  min-width: 0;
+  width: 100%;
+  font-size: 12px;
+}
+.atelier-scene {
+  position: relative;
+  min-height: 455px;
+  background-position: center;
+  background-size: cover;
+  border-radius: 12px;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid #e7c07835;
+}
+.atelier-scene::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(#00111b2e, transparent 60%, #00111b96);
+}
+.atelier-scene-caption {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 90%;
+  text-align: center;
+  background: #00111cd9;
+  border: 1px solid #e6bf7340;
+  backdrop-filter: blur(8px);
+  padding: 10px 19px;
+  border-radius: 9px;
+  color: #ffe2a4;
+}
+.atelier-scene-caption h2 {
+  font-size: 17px;
+  font-weight: 600;
+}
+.atelier-scene-caption p {
+  color: #e0e5e8;
+  font-size: 11px;
+  margin-top: 4px;
+}
+.atelier-orbit-links {
+  position: absolute;
+  inset: 18% 4% 10%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-content: space-between;
+  gap: 12px;
+}
+.atelier-orbit-links > a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  background: #071a2ed9;
+  box-shadow: 0 0 15px #edc07030;
+  border: 1px solid #edc07085;
+  border-radius: 15px;
+  padding: 12px 8px;
+  font-size: 12px;
+  max-width: 115px;
+  backdrop-filter: blur(7px);
+  color: #ffe3a9;
+}
+.atelier-orbit-links > a:nth-child(even) {
+  justify-self: end;
+}
+.atelier-islands {
+  position: absolute;
+  inset: 26% 3% 8%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-content: space-between;
+  gap: 16px;
+}
+.atelier-islands button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  max-width: 140px;
+  padding: 8px 14px;
+  background: #061b2be8;
+  border: 1px solid #d9bb764f;
+  border-radius: 9px;
+  box-shadow: 0 5px 12px #0008;
+}
+.atelier-islands button:nth-child(even) {
+  justify-self: end;
+}
+.atelier-islands small {
+  font-size: 10px;
+  color: #bacee0;
+}
+.atelier-islands button[aria-pressed='true'] {
+  border-color: #eac37a;
+}
+.atelier-bottom-three {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+  align-items: start;
+}
+.atelier-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.atelier-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 6px 0 16px;
+}
+.atelier-profile > svg {
+  color: #ecc879;
+  background: radial-gradient(#a67e3047, #0c243b);
+  width: 80px;
+  height: 80px;
+  padding: 19px;
+  border-radius: 50%;
+  border: 1px solid #e6bf7359;
+  margin-bottom: 9px;
+}
+.atelier-profile > strong {
+  font-size: 19px;
+}
+.atelier-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  text-align: start;
+  border-bottom: 1px solid #a4bbcc14;
+  padding: 10px 0;
+  font-size: 12px;
+  min-width: 0;
+}
+.atelier-row > span {
+  flex: 1;
+  min-width: 0;
+}
+.atelier-row > small,
+.atelier-row > b {
+  margin-inline-start: auto;
+}
+.atelier-row small {
+  display: block;
+  margin-top: 4px;
+  color: #a8bcc9;
+}
+.atelier-row > svg {
+  flex-shrink: 0;
+  color: #dabd81;
+}
+.atelier-row:hover {
+  color: var(--atelier-gold);
+}
+.atelier-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px !important;
+  border-radius: 50%;
+}
+.atelier-form {
+  display: grid;
+  gap: 12px;
+  font-size: 12px;
+}
+.atelier-form label {
+  display: grid;
+  gap: 6px;
+}
+.atelier-form input,
+.atelier-form select,
+.atelier-form textarea {
+  width: 100%;
+  min-width: 0;
+  background: var(--color-surface, #0b2231);
+  border: 1px solid #95afc43a;
+  border-radius: 7px;
+  padding: 9px 11px;
+  color: inherit;
+  font: inherit;
+}
+.atelier-form select option {
+  background: #122634;
+  color: #eef2f8;
+}
+.atelier-form textarea {
+  resize: vertical;
+}
+.atelier-form input:focus,
+.atelier-form textarea:focus,
+.atelier-form select:focus {
+  outline: 2px solid #dcb972;
+  outline-offset: 2px;
+}
+.atelier-form p {
+  font-size: 12px;
+}
+.atelier-actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.atelier-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.atelier-tiles > button,
+.atelier-tiles > a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 77px;
+  padding: 10px 5px;
+  background: linear-gradient(#16314680, #06202d);
+  border: 1px solid #b2c5d824;
+  border-radius: 8px;
+  font-size: 11px;
+  text-align: center;
+}
+.atelier-tiles svg {
+  color: #dfc188;
+}
+.atelier-wide-link {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  border: 1px solid #c0a26360;
+  border-radius: 8px;
+  background: #d9b56710;
+  padding: 10px 14px;
+  color: #efcd8a;
+  margin-top: 10px;
+}
+.atelier-wide-link.gold {
+  background: linear-gradient(110deg, #e8b65f, #ffe0a0);
+  color: #292015;
+  font-weight: 650;
+  box-shadow: 0 3px 18px #dfb35b29;
+}
+.atelier-preview {
+  height: 100px;
+  border-radius: 8px;
+  background: url('/art/day-panorama.png') center/cover;
+  margin-bottom: 14px;
+}
+.atelier-quote {
+  border: 1px solid #a4b7c32e;
+  border-radius: 10px;
+  padding: 16px 20px;
+  background: #051a26d9;
+  color: #d7dfe5;
+  text-align: center;
+  font:
+    italic 15px/1.55 Georgia,
+    serif;
+}
+.atelier-menu {
+  display: grid;
+  gap: 3px;
+}
+.atelier-menu > button {
+  display: flex;
+  justify-content: space-between;
+  padding: 11px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.atelier-menu > button[aria-pressed='true'] {
+  background: #d9b96f1c;
+  color: #f3ce82;
+}
+.atelier-note-list {
+  display: grid;
+}
+.atelier-note {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-align: start;
+  padding: 12px 0;
+  border-bottom: 1px solid #b3c8d419;
+  width: 100%;
+  min-width: 0;
+}
+.atelier-note > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.atelier-note strong {
+  display: block;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.atelier-note small {
+  display: block;
+  margin-top: 4px;
+}
+.atelier-note p {
+  margin: 4px 0 0;
+}
+.atelier-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 40px;
+  border-radius: 7px;
+  background: linear-gradient(130deg, #5933a4, #2c2550);
+  color: #e4d3ff;
+  flex-shrink: 0;
+}
+.atelier-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px 8px;
+  gap: 8px;
+}
+.atelier-empty svg {
+  color: #cdb780;
+}
+.atelier-folder-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.atelier-folder-grid > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #dfbd7440;
+  border-radius: 12px;
+  padding: 25px;
+  background: #082031;
+}
+.planner-composition {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 14px;
+  align-items: start;
+}
+.planner-grid-scroll {
+  overflow: auto;
+  max-height: 680px;
+  border: 1px solid #a3bbcc30;
+  border-radius: 10px;
+  background: #061923;
+  scrollbar-width: thin;
+}
+.planner-time-grid {
+  display: grid;
+  min-width: 760px;
+  direction: ltr;
+}
+.planner-day-head {
+  height: 66px;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  background: #092332;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  border-bottom: 1px solid #a3bbcc30;
+}
+.planner-day-head[aria-pressed='true'] {
+  background: #5b4926;
+  color: #ffe2a6;
+}
+.planner-day-head small {
+  font-size: 9px;
+  color: #c0ced7;
+}
+.planner-hours > span {
+  display: block;
+  height: 42px;
+  padding: 3px;
+  font-size: 10px;
+  color: #a1b6c7;
+  text-align: center;
+}
+.planner-day {
+  border-inline-start: 1px solid #acbdc622;
+}
+.planner-day-track {
+  position: relative;
+  height: 1008px;
+}
+.planner-empty-slot {
+  height: 42px;
+  display: block;
+  width: 100%;
+  border-bottom: 1px solid #a3bbcc15;
+}
+.planner-empty-slot:hover {
+  background: #edca8220;
+}
+.planner-event {
+  position: absolute;
+  overflow: hidden;
+  text-align: start;
+  border: 1px solid #95aaf859;
+  z-index: 1;
+  border-radius: 4px;
+  padding: 3px 5px;
+  font-size: 10px;
+  background: #334994;
+  color: white;
+  min-width: 0;
+}
+.planner-event b,
+.planner-event span {
+  display: block;
+}
+.planner-work {
+  background: #72394b;
+}
+.planner-learning {
+  background: #235b99;
+}
+.planner-personal {
+  background: #405797;
+}
+.planner-appointment {
+  background: #786030;
+}
+.planner-total {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 0;
+}
+.planner-total svg {
+  color: #42d9a7;
+}
+.planner-total strong {
+  font-size: 32px;
+  color: #66e7bb;
+}
+.planning-atelier .calendar-details {
+  background: var(--atelier-panel);
+  border-color: #a3bbcc30;
+}
+.planning-atelier .filter-bar {
+  background: #08202cc9;
+  border-color: #a3bbcc30;
+}
+.planning-atelier .calendar-cell {
+  background: #09212d;
+  color: #e1eaf0;
+}
+.planning-atelier .calendar-cell[aria-pressed='true'] {
+  background: #514727;
+}
+.learning-composition {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+  gap: 14px;
+}
+.atelier-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+.atelier-metric {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--atelier-panel);
+  border: 1px solid #a6c1d12e;
+  border-radius: 11px;
+  padding: 14px;
+}
+.atelier-metric > svg {
+  width: 44px;
+  height: 49px;
+  padding: 10px;
+  flex-shrink: 0;
+  background: #17cfa42c;
+  border-radius: 12px;
+  color: #55efc1;
+}
+.atelier-metric:nth-child(2) > svg {
+  background: #d8a64425;
+  color: #e9bf74;
+}
+.atelier-metric:nth-child(3) > svg {
+  background: #1bb3d425;
+  color: #57cbee;
+}
+.atelier-metric:nth-child(4) > svg {
+  background: #945bd525;
+  color: #c599ff;
+}
+.atelier-metric strong {
+  display: block;
+  font-size: 21px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+.atelier-metric small {
+  display: block;
+  font-size: 10px;
+  color: #b7c7d2;
+}
+.learning-atelier .atelier-scene {
+  min-height: 510px;
+}
+.learning-orbits {
+  position: absolute;
+  inset: 22% 3% 5%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-content: space-between;
+  gap: 20px;
+}
+.learning-orbits > a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 170px;
+  padding: 10px 12px;
+  background: linear-gradient(#063f47e6, #031c2ef0);
+  border: 1px solid #dec17b88;
+  box-shadow: 0 0 15px #e3c46d25;
+  border-radius: 13px;
+  text-align: center;
+}
+.learning-orbits > a:nth-child(even) {
+  justify-self: end;
+  background: linear-gradient(#553914e6, #031c2ef0);
+}
+.learning-orbits strong {
+  font-size: 12px;
+}
+.learning-orbits small {
+  font-size: 10px;
+  color: #d1d7dd;
+}
+.learning-orbits svg {
+  color: #eed092;
+}
+.learning-book-preview {
+  height: 110px;
+  background: url('/art/goal-quran.png') center 45% / cover;
+  border-radius: 8px;
+}
+.atelier-meter {
+  display: block;
+  width: 100%;
+  height: 5px;
+  border: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  appearance: none;
+  margin: 8px 0;
+  background: #4b687942;
+}
+.atelier-meter::-webkit-progress-bar {
+  background: #4b687942;
+}
+.atelier-meter::-webkit-progress-value {
+  background: linear-gradient(90deg, #42c8a0, #64e6bc);
+  border-radius: 6px;
+}
+.atelier-meter::-moz-progress-bar {
+  background: #42c8a0;
+}
+.atelier-page a:focus-visible,
+.atelier-page button:focus-visible {
+  outline: 2px solid #f2cd86;
+  outline-offset: 3px;
+}
+.atelier-page button:hover,
+.atelier-page a:hover {
+  filter: brightness(1.13);
+}
+html:not(.dark) .atelier-page {
+  color: #243c4b;
+  --atelier-panel: linear-gradient(135deg, #fffcf4f5, #e9f1f3f5);
+  --atelier-gold: #876020;
+}
+html:not(.dark) .app-shell:has(.atelier-page) {
+  background:
+    linear-gradient(#f3eee8e8, #e6f0f3ed),
+    url('/art/garden-courtyard.png') center/cover;
+}
+html:not(.dark) .atelier-title p,
+html:not(.dark) .atelier-panel p,
+html:not(.dark) .atelier-panel small,
+html:not(.dark) .atelier-metric small {
+  color: #536975;
+}
+html:not(.dark) .atelier-tabs,
+html:not(.dark) .atelier-tiles > a,
+html:not(.dark) .atelier-tiles > button,
+html:not(.dark) .atelier-search,
+html:not(.dark) .atelier-quote,
+html:not(.dark) .atelier-folder-grid > button {
+  background: #f4f7f8;
+  color: #344d60;
+  border-color: #7d9ca04d;
+}
+html:not(.dark) .atelier-tabs [aria-pressed='true'] {
+  color: #62460e;
+  background: #edcf904d;
+}
+html:not(.dark) .atelier-form input,
+html:not(.dark) .atelier-form textarea,
+html:not(.dark) .atelier-form select {
+  background: #fff;
+  color: #213c4e;
+}
+html:not(.dark) .atelier-wide-link {
+  color: #765420;
+  background: #fff9ec;
+}
+html:not(.dark) .atelier-row small {
+  color: #5b7180;
+}
+html:not(.dark) .atelier-scene,
+html:not(.dark) .learning-orbits,
+html:not(.dark) .atelier-islands {
+  color: #fff;
+}
+html:not(.dark) .planner-grid-scroll {
+  background: #f5f8fa;
+  color: #233d4c;
+}
+html:not(.dark) .planner-day-head {
+  background: #e4edf1;
+  color: #264759;
+}
+html:not(.dark) .planner-day-head small {
+  color: #526f7d;
+}
+html:not(.dark) .planner-empty-slot {
+  border-color: #223e501a;
+}
+html:not(.dark) .planner-hours > span {
+  color: #526f7d;
+}
+html:not(.dark) .planning-atelier .filter-bar,
+html:not(.dark) .planning-atelier .calendar-cell {
+  background: #eef3f6;
+  color: #263d4c;
+}
+html:not(.dark) .planner-total strong {
+  color: #187357;
+}
+@media (min-width: 1700px) {
+  .atelier-scene {
+    min-height: 535px;
+  }
+  .learning-atelier .atelier-scene {
+    min-height: 580px;
+  }
+}
+@media (max-width: 1200px) {
+  .atelier-three,
+  .notes-composition {
+    grid-template-columns: minmax(185px, 0.8fr) minmax(0, 1.6fr);
+  }
+  .atelier-three > aside:last-child,
+  .space-composition > section:last-child {
+    grid-column: 1/-1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .space-composition > section:last-child {
+    display: block;
+  }
+  .learning-composition,
+  .planner-composition {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .learning-composition > aside,
+  .planner-composition > aside {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .atelier-metric {
+    padding: 10px;
+    gap: 7px;
+  }
+  .atelier-metric > svg {
+    width: 32px;
+    height: 40px;
+    padding: 7px;
+  }
+  .atelier-metric strong {
+    font-size: 18px;
+  }
+}
+@media (max-width: 760px) {
+  .workspace:has(.atelier-page) {
+    padding: 15px 12px;
+  }
+  .atelier-three,
+  .notes-composition,
+  .atelier-bottom-three {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .atelier-three > aside:last-child,
+  .learning-composition > aside,
+  .planner-composition > aside {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .atelier-three > aside:first-child {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .atelier-title {
+    align-items: start;
+    flex-wrap: wrap;
+  }
+  .atelier-title .atelier-quote {
+    display: none;
+  }
+  .atelier-scene {
+    min-height: 420px;
+  }
+  .atelier-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .atelier-metric:last-child {
+    grid-column: 1/-1;
+  }
+  .atelier-search {
+    flex: 1 1 100%;
+  }
+  .learning-atelier .atelier-scene {
+    min-height: 500px;
+  }
+  .learning-orbits > a {
+    max-width: 145px;
+  }
+  .atelier-panel {
+    padding: 13px;
+  }
+  .atelier-tabs button,
+  .atelier-tabs a {
+    padding: 7px 9px;
+  }
+  .atelier-title h1 {
+    font-size: 27px;
+  }
+  .atelier-folder-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 430px) {
+  .atelier-three > aside:first-child {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .atelier-title h1 {
+    font-size: 24px;
+  }
+  .atelier-two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .learning-orbits > a {
+    max-width: 117px;
+    padding: 8px 5px;
+  }
+  .learning-orbits small {
+    font-size: 9px;
+  }
+  .atelier-orbit-links > a {
+    max-width: 96px;
+  }
+  .atelier-scene-caption {
+    padding: 8px 10px;
+  }
+  .atelier-scene-caption h2 {
+    font-size: 14px;
+  }
+}
+.planner-year {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.planner-year > button {
+  padding: 14px;
+  border: 1px solid #a3bbcc30;
+  border-radius: 10px;
+  background: var(--atelier-panel);
+  text-align: start;
+}
+.planner-year strong,
+.planner-year small {
+  display: block;
+}
+.planner-year small {
+  font-size: 11px;
+  color: #93afbd;
+  margin-top: 5px;
+}
+.planner-year button > div {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 10px;
+  text-align: center;
+}
+@media (max-width: 760px) {
+  .planner-year {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 430px) {
+  .planner-year {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.planning-atelier .scenic-path-scroll {
+  border-radius: 12px;
+  background:
+    linear-gradient(#00101920, #00101966),
+    url('/art/day-panorama.png') center/cover;
+  border: 1px solid #d0b37638;
+}
+.planning-atelier .scenic-path {
+  min-height: 205px;
+}
+.planning-atelier .filter-bar {
+  padding: 10px 14px;
+}
+.planning-atelier .page-header {
+  margin-bottom: 0;
+}
+.space-atelier .atelier-profile {
+  padding-bottom: 6px;
+}
+.space-atelier .atelier-profile > svg {
+  height: 62px;
+  width: 62px;
+  padding: 14px;
+}
+.space-atelier .atelier-form {
+  gap: 9px;
+}
+.atelier-scene a,
+.atelier-scene button {
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+.atelier-scene a:hover,
+.atelier-scene button:hover {
+  transform: translateY(-3px);
+  border-color: #f2cf7f;
+}

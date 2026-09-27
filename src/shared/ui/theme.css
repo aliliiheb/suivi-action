@@ -1,0 +1,53 @@
+/** PROGRESS — Depth, Focus, Momentum. HSL channels preserve Tailwind alpha utilities. */
+:root {
+  --bg: 230 24% 96%;
+  --surface: 0 0% 100%;
+  --surface-2: 230 26% 96%;
+  --border: 230 19% 87%;
+  --muted: 229 12% 47%;
+  --fg: 230 28% 16%;
+  --fg-muted: 229 13% 42%;
+  --primary: 254 72% 53%;
+  --primary-fg: 0 0% 100%;
+  --success: 158 68% 30%;
+  --warning: 32 88% 35%;
+  --danger: 350 69% 45%;
+  --ring: 254 72% 53%;
+  --radius: 1rem;
+  --radius-control: 0.625rem;
+  --radius-panel: 1.25rem;
+  --shadow-card: 0 2px 4px hsl(230 32% 20% / 0.025), 0 12px 36px -20px hsl(230 32% 20% / 0.18);
+  --shadow-float: 0 12px 40px -12px hsl(230 32% 20% / 0.2);
+  --shadow-modal: 0 32px 100px -20px hsl(230 40% 10% / 0.4);
+  --inner-light: inset 0 1px 0 hsl(0 0% 100% / 0.8);
+  --ambient: 0.045;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-fast: 150ms;
+  --motion-normal: 220ms;
+  --motion-progress: 800ms;
+  --space-page: 2rem;
+  --font-ui: 'Inter', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-arabic: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+  color-scheme: light;
+}
+.dark {
+  --bg: 226 36% 5%;
+  --surface: 224 29% 9%;
+  --surface-2: 223 28% 12%;
+  --border: 226 19% 21%;
+  --muted: 226 14% 60%;
+  --fg: 228 30% 94%;
+  --fg-muted: 225 17% 69%;
+  --primary: 253 100% 73%;
+  --primary-fg: 0 0% 100%;
+  --success: 158 57% 58%;
+  --warning: 37 88% 65%;
+  --danger: 350 85% 72%;
+  --ring: 253 100% 73%;
+  --shadow-card: 0 2px 4px hsl(230 60% 2% / 0.16), 0 16px 36px -20px hsl(230 60% 2% / 0.65);
+  --shadow-float: 0 16px 44px -12px hsl(230 60% 2% / 0.65);
+  --shadow-modal: 0 32px 100px -16px hsl(230 60% 2% / 0.85);
+  --inner-light: inset 0 1px 0 hsl(0 0% 100% / 0.035);
+  --ambient: 0.065;
+  color-scheme: dark;
+}

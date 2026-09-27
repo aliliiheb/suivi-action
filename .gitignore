@@ -1,0 +1,49 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+dist-ssr/
+*.local
+
+# tauri
+src-tauri/target/
+src-tauri/gen/
+
+# test output
+coverage/
+playwright-report/
+test-results/
+.vitest/
+
+# drizzle
+drizzle/.cache/
+
+# editor / os
+.DS_Store
+Thumbs.db
+.idea/
+*.log
+node_modules/.tmp/
+
+# local data & backups produced at runtime
+*.sqlite
+*.sqlite-*
+backups/
+
+# Local portable Blender runtime and generated build logs
+tools/blender/blender-4.5.9-windows-x64/
+tools/blender/blender.zip
+assets/*.blend1
+
+.env
+.env.*
+!.env.example
+.env.plans
+.env.plans.demo
+.plans-demo-data/
+.plans-test-data/
+.npm-cache/
+docs/plans-review/
+!.env.plans.example
+!.env.plans.deploy.example

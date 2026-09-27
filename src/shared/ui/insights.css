@@ -1,0 +1,469 @@
+.insight-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 285px;
+  gap: 14px;
+  align-items: start;
+}
+.insight-domain-strip {
+  display: flex;
+  gap: 9px;
+  overflow: auto;
+  padding-bottom: 4px;
+}
+.insight-index {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 230px;
+  padding: 14px;
+  border: 1px solid #bdc8d532;
+  border-radius: 11px;
+  background: var(--atelier-panel);
+}
+.insight-index > small {
+  max-width: 90px;
+  font-size: 12px;
+}
+.insight-ring {
+  width: 91px;
+  height: 91px;
+  border-radius: 50%;
+  padding: 8px;
+  flex-shrink: 0;
+}
+.insight-ring strong {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #08202c;
+  width: 100%;
+  height: 100%;
+  font-size: 23px;
+  color: #f6e1b1;
+}
+.insight-domain {
+  display: flex;
+  flex: 1 0 106px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 130px;
+  background: var(--atelier-panel);
+  border: 1px solid #c4ba963b;
+  border-radius: 10px;
+  text-align: center;
+  padding: 12px 9px;
+}
+.insight-domain strong {
+  font-size: 12px;
+}
+.insight-domain b {
+  font-size: 21px;
+}
+.insight-domain small {
+  font-size: 10px;
+  color: #9bb6c5;
+}
+.progress-landscape {
+  position: relative;
+  height: 430px;
+  border: 1px solid #d1be8045;
+  border-radius: 12px;
+  overflow: hidden;
+  background:
+    linear-gradient(#00111a30, #00111a09 60%, #00111a60),
+    url('/art/progress-mountain.png') center/cover;
+}
+.progress-landscape > header {
+  position: absolute;
+  top: 16px;
+  left: 18px;
+  color: #fff;
+  background: #061a24bd;
+  border-radius: 9px;
+  padding: 12px 18px;
+}
+.progress-landscape h2 {
+  font-size: 23px;
+  font-weight: 600;
+}
+.progress-landscape p {
+  font-size: 12px;
+  color: #e8dec7;
+}
+.mountain-milestones > a {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 132px;
+  width: 17%;
+  text-align: center;
+  background: #071b2bdc;
+  border: 1px solid #e3bf7670;
+  box-shadow: 0 0 12px #ffc86725;
+  padding: 8px;
+  border-radius: 9px;
+  color: #fff;
+}
+.mountain-milestones strong {
+  font-size: 11px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.mountain-milestones span {
+  font-size: 22px;
+  color: #ffe2a2;
+}
+.mountain-milestones small {
+  font-size: 9px;
+}
+.landscape-empty {
+  position: absolute;
+  bottom: 25px;
+  left: 10%;
+  right: 10%;
+  background: #061b29df;
+  text-align: center;
+  color: #f2d290;
+  border: 1px solid #d9b668;
+  padding: 14px;
+  border-radius: 9px;
+}
+.focus-heat {
+  display: grid;
+  grid-template-columns: 28px repeat(8, minmax(0, 1fr));
+  gap: 3px;
+  margin: 18px 0;
+}
+.heat-row {
+  display: contents;
+}
+.focus-heat small {
+  font-size: 8px;
+}
+.heat-row > span {
+  aspect-ratio: 1;
+  border-radius: 2px;
+}
+.insight-distribution {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 5px;
+  font-size: 12px;
+  padding: 8px 0;
+}
+.insights-atelier .filter-bar {
+  background: var(--atelier-panel);
+  border: 1px solid #9bb8cc30;
+}
+.insights-atelier details > summary {
+  cursor: pointer;
+  color: var(--atelier-gold);
+  padding: 5px;
+}
+.coach-local {
+  color: #d6c08c;
+  font-size: 11px;
+  border: 1px solid #dab76c50;
+  padding: 9px 13px;
+  border-radius: 20px;
+  max-width: 310px;
+}
+.coach-atelier .atelier-scene {
+  min-height: 495px;
+}
+.coach-atelier .learning-orbits {
+  inset: 25% 4% 7%;
+}
+.coach-atelier .learning-orbits > a {
+  min-width: 120px;
+}
+.coach-question {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0;
+}
+.coach-question input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  background: #0b2332;
+  border: 1px solid #b6bfcd35;
+  border-radius: 8px;
+  color: #e7eef2;
+}
+.coach-slider {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  margin: 18px 0;
+  gap: 8px;
+}
+.coach-slider input {
+  width: 100%;
+  accent-color: #59d3b0;
+}
+.coach-answer {
+  padding: 15px;
+  border: 1px solid #4dd5b347;
+  border-radius: 9px;
+  background: #27ab8510;
+  font-size: 14px !important;
+  color: inherit !important;
+}
+.people-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(270px, 1fr);
+  gap: 14px;
+}
+.people-hero .atelier-scene {
+  min-height: 520px;
+}
+.tree-generations {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 28%;
+  bottom: 20%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 22px;
+  min-width: 180px;
+}
+.tree-generations button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(110deg, #322716ef, #091d2de8);
+  border: 1px solid #e2bf76bd;
+  box-shadow: 0 0 15px #ecc57640;
+  padding: 13px 20px;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #ffe6b5;
+}
+.tree-generations [aria-pressed='true'] {
+  background: linear-gradient(110deg, #bb8624e8, #70512bdc);
+  box-shadow: 0 0 24px #efc97375;
+}
+.people-counts {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-around;
+  background: #021724d9;
+  border: 1px solid #e1c18445;
+  border-radius: 10px;
+  padding: 13px;
+  color: #ebf0f3;
+}
+.people-counts span {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+.people-counts b {
+  color: #f0ce8d;
+  font-size: 22px;
+}
+.people-feature {
+  background:
+    linear-gradient(90deg, #061c2be8, #061c2b70),
+    url('/art/goal-quran.png') center/cover;
+  padding: 16px;
+  border-radius: 9px;
+}
+.people-feature h2 {
+  font-size: 25px;
+  color: #f3dab0;
+}
+.people-feature h3 {
+  color: #fff;
+}
+.people-feature p {
+  color: #d1dce4;
+  min-height: 75px;
+}
+.people-library {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+.people-card {
+  position: relative;
+  background: var(--atelier-panel);
+  border: 1px solid #c9bf9c38;
+  border-radius: 10px;
+  overflow: hidden;
+  text-align: start;
+  padding-bottom: 15px;
+}
+.people-card-cover {
+  height: 110px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: end;
+}
+.people-card-cover span {
+  font-size: 10px;
+  padding: 5px 8px;
+  background: #061827dc;
+  color: #f0d59f;
+  border-radius: 0 6px 0 0;
+}
+.people-card > h3 {
+  font-size: 20px;
+  margin: 12px 12px 8px;
+}
+.people-card > strong,
+.people-card > small {
+  display: block;
+  margin: 6px 12px;
+  font-size: 12px;
+}
+.people-card > small {
+  font-size: 10px;
+  color: #99b0bf;
+}
+.people-read {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #022b24c9;
+  color: #63e6b2;
+  border-radius: 6px;
+}
+.people-timeline {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 2px solid #e8c379;
+  padding-top: 16px;
+}
+.people-cities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 20px;
+  background:
+    linear-gradient(#041b297a, #041b29b0),
+    url('/art/day-panorama.png') center/cover;
+  border-radius: 12px;
+}
+.people-cities > button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #042331de;
+  color: #f5d597;
+  padding: 16px;
+  border: 1px solid #dcc27c75;
+  border-radius: 10px;
+}
+.people-arabic {
+  font-size: 28px;
+  margin: 8px 0;
+  color: #d9b578;
+}
+html:not(.dark) .coach-local {
+  color: #71521b;
+}
+html:not(.dark) .coach-question input {
+  background: #fff;
+  color: #244150;
+}
+html:not(.dark) .insight-domain small,
+html:not(.dark) .people-card > small {
+  color: #526c7d;
+}
+@media (min-width: 1700px) {
+  .progress-landscape {
+    height: 495px;
+  }
+  .people-hero .atelier-scene {
+    min-height: 580px;
+  }
+}
+@media (max-width: 1150px) {
+  .insight-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .insight-columns > aside {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .people-library {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .people-hero {
+    grid-template-columns: minmax(0, 1.3fr) minmax(250px, 1fr);
+  }
+}
+@media (max-width: 760px) {
+  .insight-columns > aside,
+  .people-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .people-library,
+  .people-timeline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .progress-landscape {
+    height: 400px;
+  }
+  .mountain-milestones > a {
+    padding: 5px;
+  }
+  .mountain-milestones strong {
+    font-size: 9px;
+  }
+  .mountain-milestones small {
+    display: none;
+  }
+  .coach-question {
+    flex-direction: column;
+  }
+  .people-hero .atelier-scene {
+    min-height: 470px;
+  }
+  .coach-atelier .learning-orbits > a {
+    min-width: 90px;
+  }
+  .coach-atelier .atelier-scene {
+    min-height: 470px;
+  }
+}
+@media (max-width: 400px) {
+  .people-library {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .people-counts {
+    padding: 10px 5px;
+  }
+  .people-counts span {
+    font-size: 9px;
+  }
+  .tree-generations {
+    min-width: 155px;
+  }
+  .tree-generations button {
+    font-size: 13px;
+    padding: 11px;
+  }
+  .progress-landscape {
+    height: 380px;
+  }
+}
+
+.coach-answer{white-space:pre-wrap}

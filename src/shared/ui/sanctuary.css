@@ -1,0 +1,1233 @@
+/* Compact cinematic dashboard; all content stays live and accessible. */
+.global-search-trigger {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 450px;
+  min-width: 90px;
+  flex: 1;
+  margin-inline-end: auto;
+  padding: 8px 12px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--surface-2) / 0.8);
+  color: hsl(var(--fg-muted));
+  font-size: 11px;
+  text-align: start;
+}
+.global-search-trigger span {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.global-search-trigger kbd {
+  font-size: 10px;
+  background: hsl(var(--fg) / 0.07);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.topbar-date {
+  font-size: 11px;
+  color: hsl(var(--fg-muted));
+  white-space: nowrap;
+}
+.topbar-add {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  background: linear-gradient(120deg, #f2d38d, #c99b4d);
+  color: #25313a;
+  border-radius: 7px;
+  padding: 9px 13px;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.topbar-profile {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.topbar-profile > svg {
+  border: 1px solid hsl(var(--border));
+  box-sizing: content-box;
+  padding: 6px;
+  border-radius: 50%;
+}
+.shell-topbar {
+  gap: 12px;
+  padding: 10px 20px;
+  min-height: 54px;
+}
+.search-results {
+  max-height: 55vh;
+  overflow: auto;
+  margin-top: 12px;
+}
+.search-results a {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 8px;
+  border-bottom: 1px solid hsl(var(--border));
+  font-size: 13px;
+}
+.search-results a:hover {
+  background: hsl(var(--surface-2));
+}
+.search-results small {
+  color: hsl(var(--fg-muted));
+  flex-shrink: 0;
+}
+.sanctuary-shell {
+  background:
+    linear-gradient(hsl(var(--bg) / 0.72), hsl(var(--bg) / 0.83)),
+    url('/art/sanctuary.png') center/cover;
+}
+.sanctuary-shell .workspace {
+  padding: 14px 20px 18px;
+}
+.sanctuary-shell .sidebar-rail {
+  background: hsl(var(--surface) / 0.88);
+  backdrop-filter: blur(12px);
+}
+.sanctuary-shell .shell-topbar {
+  background: hsl(var(--surface) / 0.65);
+  backdrop-filter: blur(12px);
+}
+.sanctuary-home {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  max-width: 2100px;
+  margin: auto;
+}
+.sanctuary-upper {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 27%);
+  gap: 18px;
+}
+.sanctuary-primary {
+  min-width: 0;
+}
+.sanctuary-welcome {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 15px;
+  min-height: 61px;
+}
+.workspace .sanctuary-welcome h1 {
+  font-size: clamp(23px, 2.1vw, 33px);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+.sanctuary-welcome h1 span {
+  color: #e8bb61;
+}
+.sanctuary-welcome > div > p {
+  font-size: 12px;
+  margin-top: 3px;
+  color: hsl(var(--fg-muted));
+}
+.daily-verse {
+  display: block;
+}
+.compact-verse {
+  width: 34%;
+  max-width: 340px;
+  flex-shrink: 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: 15px;
+  background: hsl(var(--surface) / 0.7);
+  text-align: center;
+  padding: 8px 14px;
+}
+.compact-verse .arabic-text {
+  font-size: 17px;
+  line-height: 1.8;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.compact-verse small {
+  font-size: 9px;
+  color: hsl(var(--fg-muted));
+}
+.arabic-text {
+  font-family: 'Traditional Arabic', 'Amiri', 'Noto Naskh Arabic', 'Segoe UI', serif;
+  letter-spacing: 0;
+  line-height: 2.1;
+  text-align: right;
+}
+.sanctuary-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.sanctuary-stat {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  background: linear-gradient(130deg, hsl(var(--surface-2) / 0.9), hsl(var(--surface) / 0.9));
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  padding: 11px 12px;
+  box-shadow:
+    inset 0 1px 0 #ffffff08,
+    0 6px 12px #00000015;
+}
+.stat-medallion {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: radial-gradient(circle at 40% 20%, #34cf9d44, #0c4f4133);
+  color: #32c994;
+  box-shadow: 0 0 15px #29a88718;
+}
+.stat-1 .stat-medallion {
+  color: #66c8f2;
+  background: #197abc33;
+}
+.stat-2 .stat-medallion {
+  color: #a389fa;
+  background: #7755d733;
+}
+.stat-3 .stat-medallion {
+  color: #ffb64c;
+  background: #c16d1b33;
+}
+.sanctuary-stat strong {
+  font-size: 23px;
+  line-height: 1.1;
+  display: block;
+}
+.sanctuary-stat small {
+  font-size: 9px;
+  line-height: 1.4;
+  display: block;
+  margin-top: 5px;
+  color: hsl(var(--fg-muted));
+}
+.sanctuary-center {
+  display: grid;
+  grid-template-columns: minmax(205px, 32%) minmax(0, 1fr);
+  gap: 10px;
+  min-height: 345px;
+}
+.sanctuary-priorities {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.glass-panel {
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  background: linear-gradient(140deg, hsl(var(--surface-2) / 0.8), hsl(var(--surface) / 0.9));
+  box-shadow:
+    inset 0 1px 0 #ffffff08,
+    0 8px 18px #00000012;
+  padding: 13px;
+  min-width: 0;
+  overflow: hidden;
+}
+.small-heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 11px;
+}
+.small-heading > svg {
+  color: hsl(var(--primary));
+  flex-shrink: 0;
+}
+.small-heading h2 {
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 0;
+}
+.small-heading > a {
+  margin-inline-start: auto;
+  color: hsl(var(--primary));
+  font-size: 9px;
+  white-space: nowrap;
+  font-weight: 400;
+}
+.priority-card {
+  background:
+    linear-gradient(90deg, hsl(var(--surface) / 0.97) 40%, hsl(var(--surface) / 0.3)),
+    url('/art/sanctuary.png') right bottom/cover;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 178px;
+}
+.priority-card .small-heading {
+  margin: 0;
+}
+.priority-card h2 {
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 600;
+  max-width: 83%;
+  overflow-wrap: anywhere;
+}
+.priority-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 85%;
+  font-size: 10px;
+}
+.priority-progress .progress-track {
+  height: 5px;
+}
+.priority-context {
+  font-size: 10px;
+  line-height: 1.7;
+  color: hsl(var(--fg-muted));
+  margin: 0;
+}
+.priority-card .gold-link {
+  padding: 7px 10px;
+  font-size: 11px;
+  min-height: 29px;
+  margin-top: auto;
+  box-shadow: 0 0 14px #bba26224;
+}
+.next-card {
+  flex: 1;
+}
+.next-task {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid hsl(var(--border) / 0.45);
+  padding: 7px 0;
+  min-height: 40px;
+}
+.next-task-title {
+  flex: 1;
+  min-width: 0;
+}
+.next-task-title strong {
+  font-size: 10px;
+  font-weight: 550;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.next-task-title small {
+  font-size: 9px;
+  color: hsl(var(--fg-muted));
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.task-play {
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: #198aaf30;
+  width: 27px;
+  height: 27px;
+  color: #7dcdea;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+.next-task:first-child .task-play {
+  background: #138565;
+  color: #b1ffe0;
+}
+.task-check {
+  width: 13px;
+  height: 13px;
+  border: 1px solid hsl(var(--fg-muted) / 0.5);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.task-check:hover {
+  background: #289f75;
+}
+.focus-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid hsl(var(--primary) / 0.4);
+  color: hsl(var(--primary));
+  font-size: 10px;
+  border-radius: 5px;
+  padding: 6px;
+  margin-top: 8px;
+}
+.compact-empty {
+  font-size: 11px;
+  line-height: 1.7;
+  color: hsl(var(--fg-muted));
+  display: block;
+  padding: 12px 0;
+}
+.sphere-stage {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  min-height: 350px;
+  align-self: stretch;
+  background: radial-gradient(ellipse at 50% 55%, #055d5335, transparent 60%);
+}
+.sphere-render {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  inset: 0;
+  filter: drop-shadow(0 12px 16px #0008);
+  pointer-events: none;
+}
+.objective-orbit {
+  position: absolute;
+  inset: 0;
+}
+.orbit-objective {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 140px;
+  z-index: 2;
+  text-shadow: 0 1px 4px #001017;
+}
+.orbit-objective > span {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 20%, #5baf9966, #104b44);
+  color: #d1ffe9;
+  border: 1px solid #4bc09d55;
+  box-shadow: 0 0 12px #45d6b32b;
+  flex-shrink: 0;
+}
+.orbit-color-1 > span {
+  background: linear-gradient(#2b7298, #173b66);
+  color: #d2edff;
+}
+.orbit-color-2 > span {
+  background: linear-gradient(#99553f, #5c2c27);
+  color: #ffd0bd;
+}
+.orbit-color-3 > span {
+  background: linear-gradient(#a1782c, #75511e);
+  color: #ffebb6;
+}
+.orbit-objective > div {
+  min-width: 0;
+}
+.orbit-objective strong {
+  display: block;
+  font-size: 10px;
+  font-weight: 550;
+  line-height: 1.4;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.orbit-objective small {
+  font-size: 10px;
+  color: #77dac1;
+}
+.sphere-caption {
+  position: absolute;
+  top: 62%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  background: #051319b8;
+  backdrop-filter: blur(8px);
+  padding: 5px 15px;
+  border-radius: 9px;
+  border: 1px solid #b49b6e33;
+  z-index: 1;
+  min-width: 145px;
+  color: #fff4d9;
+  pointer-events: none;
+}
+.sphere-caption strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+.sphere-caption span {
+  font-size: 8px;
+}
+.sphere-empty,
+.orbit-next {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 10px;
+  white-space: nowrap;
+  color: hsl(var(--primary));
+  padding: 5px 10px;
+  background: hsl(var(--surface) / 0.8);
+  border-radius: 8px;
+}
+.sacred-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sacred-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  position: relative;
+  border: 1px solid hsl(var(--primary) / 0.25);
+  border-radius: 13px;
+  padding: 16px;
+  overflow: hidden;
+  min-height: 145px;
+  background: hsl(var(--surface) / 0.85);
+  box-shadow: 0 9px 20px #0002;
+  flex: 1;
+}
+.sacred-label {
+  font-size: 11px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  z-index: 1;
+}
+.sacred-label svg {
+  color: hsl(var(--primary));
+}
+.sacred-card h2 {
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 550;
+  max-width: 82%;
+}
+.sacred-card > p:not(.arabic-text) {
+  font-size: 11px;
+  line-height: 1.6;
+  max-width: 82%;
+  color: hsl(var(--fg-muted));
+}
+.illustrated-card {
+  background:
+    linear-gradient(
+      90deg,
+      hsl(var(--surface) / 0.96),
+      hsl(var(--surface) / 0.62) 65%,
+      hsl(var(--surface) / 0.15)
+    ),
+    url('/art/sanctuary.png') right center/cover;
+}
+.quran-card {
+  background-position: right bottom;
+}
+.sacred-action {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 10px;
+  border: 1px solid hsl(var(--primary) / 0.27);
+  padding: 5px 9px;
+  border-radius: 5px;
+  color: hsl(var(--primary));
+  margin-top: auto;
+  background: hsl(var(--bg) / 0.3);
+}
+.dhikr-card {
+  background:
+    radial-gradient(ellipse at 100% 50%, #8f642620, transparent 80%), hsl(var(--surface) / 0.9);
+}
+.dhikr-card .arabic-text {
+  font-size: 19px;
+  line-height: 1.85;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  align-self: stretch;
+}
+.dhikr-card small {
+  font-size: 9px;
+  color: hsl(var(--fg-muted));
+  align-self: stretch;
+}
+.sanctuary-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.1fr 1fr 0.55fr;
+  gap: 10px;
+}
+.sanctuary-bottom > .glass-panel {
+  min-height: 150px;
+}
+.timeline-task {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  position: relative;
+  font-size: 10px;
+  padding: 4px 0;
+}
+.timeline-task i {
+  width: 5px;
+  height: 5px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #4cc6a5;
+  box-shadow: 0 0 6px #4cc6a550;
+}
+.timeline-task small {
+  font-size: 9px;
+  color: hsl(var(--fg-muted));
+  min-width: 25px;
+}
+.timeline-task > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mini-goal {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 7px;
+  padding: 4px 0;
+  font-size: 10px;
+}
+.mini-goal span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mini-goal strong {
+  font-size: 9px;
+  font-weight: 400;
+}
+.mini-goal .progress-track {
+  height: 4px;
+  grid-column: 1/-1;
+  margin-top: 4px;
+  max-width: 90%;
+}
+.habit-week-head,
+.habit-week-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(7, 10px);
+  gap: 4px;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 9px;
+}
+.habit-week-head small {
+  font-size: 8px;
+  color: hsl(var(--fg-muted));
+  text-align: center;
+}
+.habit-week-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.habit-week-row i {
+  height: 6px;
+  width: 6px;
+  margin: auto;
+  border-radius: 50%;
+  background: hsl(var(--border));
+}
+.habit-week-row i.done {
+  background: #55d3a1;
+  box-shadow: 0 0 6px #4bc19033;
+}
+.advice-mini {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+.advice-mini .small-heading {
+  margin-bottom: 5px;
+}
+.advice-mini p {
+  font-size: 10px;
+  line-height: 1.55;
+  color: hsl(var(--fg-muted));
+}
+.suggestion-tag {
+  font-size: 8px;
+  color: hsl(var(--success));
+  margin-bottom: 3px;
+}
+.inspiration-mini {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: end;
+  gap: 9px;
+  padding: 14px 9px;
+  border-radius: 12px;
+  border: 1px solid hsl(var(--primary) / 0.3);
+  background:
+    linear-gradient(transparent, #061418d9),
+    url('/art/sanctuary.png') 78% center/cover;
+  color: #fff4dd;
+  text-align: center;
+}
+.inspiration-mini span {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.sanctuary-capture {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: hsl(var(--surface) / 0.9);
+  border: 1px solid hsl(var(--border));
+  border-radius: 9px;
+  padding: 10px 14px;
+  color: hsl(var(--fg-muted));
+  font-size: 11px;
+  text-align: start;
+}
+.sanctuary-capture svg:last-child {
+  margin-inline-start: auto;
+  color: hsl(var(--primary));
+}
+/* Quran and adhkar readers */
+.quran-layout {
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.surah-sidebar {
+  border: 1px solid hsl(var(--border));
+  border-radius: 15px;
+  background: hsl(var(--surface));
+  overflow: hidden;
+  position: sticky;
+  top: 0;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+}
+.surah-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px;
+  border-bottom: 1px solid hsl(var(--border));
+  color: hsl(var(--fg-muted));
+}
+.surah-search input {
+  background: transparent;
+  min-width: 0;
+  width: 100%;
+  font-size: 12px;
+  outline-offset: 4px;
+}
+.surah-sidebar nav {
+  overflow: auto;
+}
+.surah-sidebar nav button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  text-align: start;
+  border-bottom: 1px solid hsl(var(--border) / 0.4);
+}
+.surah-sidebar nav button[aria-current] {
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--primary));
+}
+.surah-sidebar nav button > span:nth-child(2) {
+  flex: 1;
+}
+.surah-sidebar strong {
+  display: block;
+  font-size: 12px;
+}
+.surah-sidebar small {
+  display: block;
+  font-size: 10px;
+  color: hsl(var(--fg-muted));
+}
+.surah-sidebar .arabic-text {
+  font-size: 17px;
+}
+.surah-number {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border: 1px solid hsl(var(--primary) / 0.3);
+  border-radius: 8px;
+  font-size: 11px;
+}
+.mushaf-panel {
+  padding: 25px 35px;
+  border: 1px solid hsl(var(--primary) / 0.3);
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at 50% 0%, hsl(var(--primary) / 0.08), transparent 40%),
+    hsl(var(--surface));
+  min-width: 0;
+}
+.mushaf-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 0 30px;
+  border-bottom: double 3px hsl(var(--primary) / 0.3);
+  color: hsl(var(--primary));
+}
+.mushaf-heading h2 {
+  font-family: 'Traditional Arabic', 'Amiri', serif;
+  font-size: 39px;
+}
+.mushaf-heading p {
+  color: hsl(var(--fg-muted));
+  font-size: 12px;
+}
+.mushaf-heading label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: hsl(var(--fg-muted));
+}
+.ayah-list article {
+  padding: 20px 10px;
+  border-bottom: 1px solid hsl(var(--border) / 0.6);
+  scroll-margin: 20px;
+}
+.ayah-list article.selected-ayah {
+  background: hsl(var(--primary) / 0.1);
+  border-radius: 10px;
+}
+.ayah-list .arabic-text {
+  font-size: inherit;
+  line-height: 2.4;
+  white-space: pre-line;
+}
+.ayah-number {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid hsl(var(--primary) / 0.4);
+  color: hsl(var(--primary));
+  border-radius: 50%;
+  min-width: 31px;
+  height: 31px;
+  font-size: 16px;
+  margin-inline-start: 12px;
+}
+.ayah-list article > button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: hsl(var(--fg-muted));
+  padding: 6px;
+}
+.ayah-list article > button[aria-pressed='true'] {
+  color: hsl(var(--primary));
+}
+.mushaf-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 25px 0;
+  font-size: 12px;
+}
+.source-note {
+  font-size: 11px;
+  color: hsl(var(--fg-muted));
+  line-height: 1.7;
+}
+.source-note a {
+  color: hsl(var(--primary));
+}
+.adhkar-toolbar {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.adhkar-toolbar select,
+.adhkar-toolbar label {
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--surface));
+  padding: 12px;
+  min-width: 230px;
+  max-width: 100%;
+  font-size: 14px;
+}
+.adhkar-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+.adhkar-toolbar input {
+  background: transparent;
+  width: 100%;
+  min-width: 0;
+}
+.dhikr-reader {
+  padding: 25px 30px;
+  scroll-margin: 15px;
+}
+.dhikr-reader-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: hsl(var(--primary));
+  margin-bottom: 12px;
+}
+.dhikr-reader > .arabic-text {
+  font-size: 28px;
+  line-height: 2.3;
+  white-space: pre-line;
+}
+.dhikr-reader details {
+  font-size: 14px;
+  color: hsl(var(--fg-muted));
+  margin: 15px 0;
+}
+.dhikr-reader details p {
+  line-height: 2;
+  padding: 12px 0;
+}
+.dhikr-reader footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  align-items: center;
+  border-top: 1px solid hsl(var(--border));
+  padding-top: 15px;
+  margin-top: 15px;
+  font-size: 12px;
+}
+@media (min-width: 1100px) {
+  .sidebar-container,
+  .sidebar-rail,
+  .sidebar-rail:hover,
+  .sidebar-rail:focus-within {
+    width: 172px;
+  }
+  .sidebar-nav {
+    padding-inline: 5px;
+  }
+  .sidebar-link {
+    height: 34px;
+  }
+  .sidebar-link > span:first-child {
+    width: 38px;
+  }
+  .sidebar-link > span:last-child {
+    font-size: 11px;
+  }
+  .sidebar-link svg {
+    width: 16px;
+    height: 16px;
+  }
+  .sidebar-brand {
+    min-height: 70px;
+  }
+  .sidebar-brand > span:first-child {
+    width: 48px;
+  }
+  .sidebar-brand > span:last-child {
+    font-family: Georgia, serif;
+    font-size: 17px;
+    letter-spacing: 0.03em;
+  }
+  .sidebar-logo {
+    background: transparent;
+    border: 1px solid #b78b41;
+    color: #e6bd70;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #d9b26922;
+  }
+}
+@media (min-width: 1600px) {
+  .sanctuary-shell .workspace {
+    padding: 18px 28px;
+  }
+  .sanctuary-center {
+    min-height: 430px;
+  }
+  .sanctuary-stat {
+    padding: 15px;
+  }
+  .sanctuary-upper {
+    grid-template-columns: minmax(0, 1fr) 29%;
+  }
+  .sanctuary-welcome h1 {
+    font-size: 36px;
+  }
+  .sacred-card {
+    padding: 22px;
+  }
+  .sacred-card h2 {
+    font-size: 20px;
+  }
+  .sacred-card > p:not(.arabic-text) {
+    font-size: 13px;
+  }
+  .sacred-card .arabic-text {
+    font-size: 24px;
+  }
+  .next-task-title strong {
+    font-size: 12px;
+  }
+  .priority-card h2 {
+    font-size: 20px;
+  }
+  .orbit-objective strong {
+    font-size: 12px;
+    max-width: 125px;
+  }
+  .orbit-objective {
+    max-width: 170px;
+  }
+  .orbit-objective > span {
+    width: 35px;
+    height: 35px;
+  }
+  .sanctuary-bottom > .glass-panel {
+    padding: 18px;
+    min-height: 180px;
+  }
+  .mini-goal,
+  .timeline-task {
+    font-size: 12px;
+  }
+}
+@media (max-width: 1199px) {
+  .sanctuary-upper {
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 12px;
+  }
+  .sanctuary-center {
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+  .stat-medallion {
+    width: 29px;
+    height: 34px;
+  }
+  .stat-medallion svg {
+    width: 20px;
+  }
+  .sanctuary-stat {
+    gap: 6px;
+    padding: 10px 8px;
+  }
+  .sanctuary-stat strong {
+    font-size: 19px;
+  }
+  .topbar-date,
+  .topbar-profile span {
+    display: none;
+  }
+  .orbit-objective strong {
+    max-width: 65px;
+    font-size: 9px;
+  }
+  .orbit-objective > span {
+    width: 24px;
+    height: 24px;
+  }
+  .orbit-objective {
+    gap: 4px;
+  }
+  .sanctuary-bottom {
+    grid-template-columns: 1fr 1fr 1.2fr 1fr;
+  }
+  .inspiration-mini {
+    display: none;
+  }
+  .compact-verse {
+    width: 38%;
+  }
+}
+@media (max-width: 1000px) {
+  .sanctuary-upper {
+    grid-template-columns: 1fr;
+  }
+  .sacred-stack {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .sanctuary-center {
+    grid-template-columns: 34% minmax(0, 1fr);
+    min-height: 370px;
+  }
+  .sanctuary-bottom {
+    grid-template-columns: 1fr 1fr;
+  }
+  .quran-layout {
+    grid-template-columns: 210px minmax(0, 1fr);
+  }
+  .mushaf-panel {
+    padding: 18px;
+  }
+  .topbar-profile {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .sanctuary-shell .workspace {
+    padding: 12px;
+  }
+  .shell-topbar {
+    padding: 8px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .global-search-trigger {
+    max-width: none;
+  }
+  .global-search-trigger span,
+  .global-search-trigger kbd {
+    display: none;
+  }
+  .global-search-trigger {
+    flex: 0;
+    padding: 9px;
+    min-width: 34px;
+  }
+  .shell-topbar > .text-xs {
+    display: none;
+  }
+  .topbar-add {
+    font-size: 11px;
+    padding: 8px;
+  }
+  .sanctuary-welcome {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .compact-verse {
+    width: 100%;
+    max-width: none;
+  }
+  .sanctuary-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .sanctuary-center {
+    display: flex;
+    flex-direction: column;
+  }
+  .sphere-stage {
+    height: 330px;
+    order: -1;
+  }
+  .sphere-caption {
+    top: 62%;
+  }
+  .orbit-objective strong {
+    max-width: 62px;
+  }
+  .sphere-render {
+    object-fit: contain;
+  }
+  .sacred-stack,
+  .sanctuary-bottom {
+    grid-template-columns: 1fr;
+  }
+  .sanctuary-priorities {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .sacred-card {
+    min-height: 175px;
+  }
+  .quran-layout {
+    display: flex;
+    flex-direction: column;
+  }
+  .surah-sidebar {
+    position: static;
+    width: 100%;
+    max-height: 230px;
+  }
+  .mushaf-panel {
+    padding: 14px;
+    width: 100%;
+  }
+  .mushaf-footer {
+    gap: 5px;
+  }
+  .mushaf-footer button {
+    font-size: 10px;
+    padding: 8px;
+  }
+  .dhikr-reader {
+    padding: 18px;
+  }
+  .dhikr-reader > .arabic-text {
+    font-size: 25px;
+  }
+  .dhikr-reader footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .adhkar-toolbar select {
+    width: 100%;
+    min-width: 0;
+  }
+  .adhkar-toolbar label {
+    min-width: 0;
+  }
+  .sanctuary-capture {
+    font-size: 10px;
+  }
+}
+:root:not(.dark) .orbit-objective {
+  text-shadow: none;
+}
+:root:not(.dark) .orbit-objective small {
+  color: #176d50;
+}
+:root:not(.dark) .sanctuary-shell {
+  background:
+    linear-gradient(#f3efe7e8, #f3efe7f5),
+    url('/art/sanctuary.png') center/cover;
+}
