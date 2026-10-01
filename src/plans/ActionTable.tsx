@@ -155,6 +155,8 @@ export function ActionTable({
               <th>Projet / module</th>
               <th>Pilote</th>
               <th>{heading('planned_end', 'Échéance')}</th>
+              <th>{heading('deadline_2', '2e échéance')}</th>
+              <th>{heading('deadline_3', '3e échéance')}</th>
               <th>{heading('status', 'Statut')}</th>
               <th>{heading('progress', 'Avancement')}</th>
               <th>
@@ -185,6 +187,8 @@ export function ActionTable({
                   {dateFR(a.planned_end)}
                   {isLate(a) && <small>En retard</small>}
                 </td>
+                <td>{dateFR(a.deadline_2 || '')}</td>
+                <td>{dateFR(a.deadline_3 || '')}</td>
                 <td>
                   <Badge action={a} />
                 </td>

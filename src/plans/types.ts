@@ -47,6 +47,8 @@ export type Action = {
   planned_start: string;
   planned_end: string;
   actual_start: string;
+  deadline_2?: string;
+  deadline_3?: string;
   actual_end: string;
   status: Status;
   progress: number;

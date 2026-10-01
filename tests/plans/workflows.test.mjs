@@ -390,7 +390,7 @@ test('Excel : pourcentages natifs, dates et commentaires en lecture seule', asyn
   const sheet = wb.getWorksheet('Actions');
   assert.ok(sheet.getCell('H2').value instanceof Date);
   assert.equal(sheet.getCell('H2').numFmt, 'dd/mm/yyyy');
-  assert.equal(sheet.getCell('S2').value, 'Commentaire exporté');
+  assert.equal(sheet.getCell('U2').value, 'Commentaire exporté');
   sheet.getCell('M2').value = 0.625;
   sheet.getCell('M2').numFmt = '0.0%';
   const parsed = await readFileRows('natif.xlsx', Buffer.from(await wb.xlsx.writeBuffer()));
@@ -443,6 +443,53 @@ test('Rejet des fichiers non compatibles et migrations versionnées', async () =
   const versions = (await db.query('SELECT version FROM plan_migrations ORDER BY version')).rows;
   assert.deepEqual(
     versions.map((v) => v.version),
-    [1, 2],
+    [1, 2, 3],
   );
+});
+
+test('Deux échéances supplémentaires : validation, droits et aller-retour Excel/Word', async () => {
+  const data = { ...clean(await current()), deadline_2: '2026-03-15', deadline_3: '2026-04-01' };
+  for (const change of [
+    { deadline_2: '2026-02-30' },
+    { deadline_2: '2026-01-01' },
+    { deadline_3: '2026-03-01' },
+    { deadline_2: '' },
+  ])
+    assert.throws(() => parse(actionSchema, { ...data, ...change }));
+  const saved = await make(chef, 'actions', { ...data, code: 'DATES-23' });
+  await assert.rejects(
+    () =>
+      exclusive(db, pilot.id, (tx, u) =>
+        mutate(
+          tx,
+          u,
+          'actions',
+          saved.id,
+          { ...clean(saved), deadline_3: '2026-05-01' },
+          saved.version,
+        ),
+      ),
+    (e) => e.status === 403,
+  );
+  for (const format of ['xlsx', 'docx']) {
+    const parsed = await readFileRows(
+      `dates.${format}`,
+      await exportFile(format, project, [saved], [module], [pilot]),
+    );
+    const preview = await exclusive(db, chef.id, (tx, u) =>
+      previewImport(tx, u, { projectId: project.id, filename: `dates.${format}`, ...parsed }),
+    );
+    assert.equal(preview.entries[0].data.deadline_2, '2026-03-15');
+    assert.equal(preview.entries[0].data.deadline_3, '2026-04-01');
+  }
+  const oldFile = await readFileRows(
+    'ancien.xlsx',
+    await exportFile('xlsx', project, [saved], [module], [pilot]),
+  );
+  delete oldFile.mapping.deadline_2;
+  delete oldFile.mapping.deadline_3;
+  const preserved = await exclusive(db, chef.id, (tx, u) =>
+    previewImport(tx, u, { projectId: project.id, filename: 'ancien.xlsx', ...oldFile }),
+  );
+  assert.equal(preserved.entries[0].data.deadline_3, '2026-04-01');
 });

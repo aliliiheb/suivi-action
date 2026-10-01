@@ -125,6 +125,14 @@ export function ActionDetail({
               </dd>
             </div>
             <div>
+              <dt>2e échéance</dt>
+              <dd>{dateFR(action.deadline_2 || '')}</dd>
+            </div>
+            <div>
+              <dt>3e échéance</dt>
+              <dd>{dateFR(action.deadline_3 || '')}</dd>
+            </div>
+            <div>
               <dt>Avancement du travail</dt>
               <dd>
                 <progress max={100} value={action.progress} aria-label="Avancement du travail" />{' '}
@@ -342,6 +350,8 @@ const fieldLabels: Record<string, string> = {
   module_id: 'Module',
   planned_start: 'Début prévu',
   planned_end: 'Fin prévue',
+  deadline_2: '2e échéance',
+  deadline_3: '3e échéance',
   actual_start: 'Début réel',
   actual_end: 'Fin réelle',
   status: 'Statut',

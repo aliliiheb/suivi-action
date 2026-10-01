@@ -21,6 +21,8 @@ export const actionSchema = z
     module_id: short,
     planned_start: date,
     planned_end: date,
+    deadline_2: optionalDate,
+    deadline_3: optionalDate,
     actual_start: optionalDate,
     actual_end: optionalDate,
     status: z.enum(statuses),
@@ -47,6 +49,10 @@ export const actionSchema = z
     const issue = (path, message) => ctx.addIssue({ code: 'custom', path: [path], message });
     if (v.planned_end < v.planned_start)
       issue('planned_end', 'La fin prévue précède le début prévu.');
+    if (v.deadline_2 && v.deadline_2 < v.planned_end)
+      issue('deadline_2', 'La 2e échéance doit être égale ou postérieure à la première.');
+    if (v.deadline_3 && (!v.deadline_2 || v.deadline_3 < v.deadline_2))
+      issue('deadline_3', 'La 3e échéance nécessite une 2e échéance antérieure ou égale.');
     if (v.actual_end && (!v.actual_start || v.actual_end < v.actual_start))
       issue('actual_end', 'La fin réelle nécessite un début réel antérieur ou égal.');
     if (v.status === 'Terminée' && (v.progress !== 100 || !v.actual_end))

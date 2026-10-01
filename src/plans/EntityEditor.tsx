@@ -226,6 +226,12 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
               {input('progress', 'Avancement (%)', 'number', true)}
               {input('planned_start', 'Début prévu', 'date', true, pilot)}
               {input('planned_end', 'Fin prévue', 'date', true, pilot)}
+              {input('deadline_2', '2e échéance (facultatif)', 'date', false, pilot)}
+              {input('deadline_3', '3e échéance (facultatif)', 'date', false, pilot)}
+              <p className="form-hint wide">
+                Les échéances doivent se suivre dans l’ordre. Le retard reste calculé sur la fin
+                prévue initiale.
+              </p>
               {input('actual_start', 'Début réel', 'date')}
               {input('actual_end', 'Fin réelle', 'date')}
               <p className="form-hint wide">

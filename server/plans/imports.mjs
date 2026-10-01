@@ -98,7 +98,14 @@ export async function previewImport(
               : null
             : normalizeNumber(v);
       }
-      for (const key of ['planned_start', 'planned_end', 'actual_start', 'actual_end'])
+      for (const key of [
+        'planned_start',
+        'planned_end',
+        'actual_start',
+        'actual_end',
+        'deadline_2',
+        'deadline_3',
+      ])
         if (key in merged) merged[key] = normalizeDate(merged[key]);
       if (typeof merged.corrective === 'string') {
         try {

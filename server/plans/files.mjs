@@ -32,10 +32,19 @@ export const columns = {
   unit: 'Unité',
   cause: 'Cause du retard',
   corrective: 'Actions correctives JSON',
+  deadline_2: '2e échéance',
+  deadline_3: '3e échéance',
 };
 const values = (a) =>
   Object.keys(columns).map((k) => (k === 'corrective' ? JSON.stringify(a[k] || []) : (a[k] ?? '')));
-const dateFields = ['planned_start', 'planned_end', 'actual_start', 'actual_end'];
+const dateFields = [
+  'planned_start',
+  'planned_end',
+  'actual_start',
+  'actual_end',
+  'deadline_2',
+  'deadline_3',
+];
 const frenchDate = (value) => (value ? String(value).split('-').reverse().join('/') : '');
 export async function exportFile(format, project, actions, modules, users) {
   if (format === 'xlsx') {
@@ -87,7 +96,7 @@ export async function exportFile(format, project, actions, modules, users) {
         }
       }
     });
-    sheet.autoFilter = { from: 'A1', to: 'S1' };
+    sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: sheet.columnCount } };
     sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
     sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF174D43' } };
     sheet.eachRow((row, n) => {
@@ -251,11 +260,12 @@ export async function readFileRows(filename, buffer) {
     );
     const standard = tables.filter((t) => t[0]?.[0] === 'Champ' && t[0]?.[1] === 'Valeur');
     if (standard.length) {
+      const labels = Object.values(columns).filter((label) =>
+        standard.some((table) => table.some((row) => row[0] === label)),
+      );
       matrix = [
-        Object.values(columns),
-        ...standard.map((t) =>
-          Object.values(columns).map((label) => t.find((r) => r[0] === label)?.[1] ?? ''),
-        ),
+        labels,
+        ...standard.map((t) => labels.map((label) => t.find((r) => r[0] === label)?.[1] ?? '')),
       ];
     } else if (tables.length) {
       matrix = tables[0];
