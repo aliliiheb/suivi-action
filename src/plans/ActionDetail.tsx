@@ -109,6 +109,22 @@ export function ActionDetail({
           <h2>Suivi de l’action</h2>
           <dl>
             <div>
+              <dt>Emplacement</dt>
+              <dd>
+                {action.location === 'AUTRE (à préciser)'
+                  ? action.location_other
+                  : action.location || 'Non renseigné'}
+              </dd>
+            </div>
+            <div>
+              <dt>N° Mission</dt>
+              <dd>{action.mission_number || 'Non renseigné'}</dd>
+            </div>
+            <div>
+              <dt>Réf. Action Prioritaire</dt>
+              <dd>{action.priority_reference || 'Non renseignée'}</dd>
+            </div>
+            <div>
               <dt>Pilote responsable</dt>
               <dd>{state.users.find((u) => u.id === action.pilot_id)?.name}</dd>
             </div>
@@ -350,6 +366,10 @@ const fieldLabels: Record<string, string> = {
   module_id: 'Module',
   planned_start: 'Début prévu',
   planned_end: 'Fin prévue',
+  location: 'Emplacement',
+  location_other: 'Autre emplacement',
+  mission_number: 'N° Mission',
+  priority_reference: 'Réf. Action Prioritaire',
   deadline_2: '2e échéance',
   deadline_3: '3e échéance',
   actual_start: 'Début réel',

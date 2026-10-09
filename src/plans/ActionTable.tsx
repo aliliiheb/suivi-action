@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowUpDown, ArrowRight, Search } from 'lucide-react';
 import type { Action, State } from './types';
 import { statuses, dateFR, isLate, projectOf } from './types';
+import locations from '../../server/plans/location-options.json';
 export function Badge({ action }: { action: Action }) {
   return <span className={`badge status-${statuses.indexOf(action.status)}`}>{action.status}</span>;
 }
@@ -49,12 +50,20 @@ export function ActionTable({
         module: a.module_id,
         pilot: a.pilot_id,
         status: a.status,
+        location: a.location,
       };
       return (
-        `${a.code} ${a.description} ${a.objective}`
+        `${a.code} ${a.description} ${a.objective} ${a.location || ''} ${a.location_other || ''} ${a.mission_number || ''} ${a.priority_reference || ''}`
           .toLocaleLowerCase('fr')
           .includes(search.toLocaleLowerCase('fr')) &&
         Object.entries(values).every(([k, v]) => !filters[k] || filters[k] === v) &&
+        ['mission_number', 'priority_reference'].every(
+          (key) =>
+            !filters[key] ||
+            String(a[key as keyof Action] || '')
+              .toLocaleLowerCase('fr')
+              .includes(filters[key].toLocaleLowerCase('fr')),
+        ) &&
         (!filters.start || a.planned_end >= filters.start) &&
         (!filters.end || a.planned_end <= filters.end)
       );
@@ -88,7 +97,7 @@ export function ActionTable({
               <Search size={18} />
               <input
                 aria-label="Rechercher une action"
-                placeholder="Rechercher une action, un objectif…"
+                placeholder="Action, emplacement, mission, référence…"
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -107,6 +116,28 @@ export function ActionTable({
               {filter('project', 'Projet', state.projects)}
               {filter('module', 'Module', state.modules)}
               {filter('pilot', 'Pilote', state.users)}
+              {filter(
+                'location',
+                'Emplacement',
+                locations.map((name) => ({ id: name, name })),
+              )}
+              {(
+                [
+                  ['mission_number', 'N° Mission'],
+                  ['priority_reference', 'Réf. Action Prioritaire'],
+                ] as const
+              ).map(([key, label]) => (
+                <label key={key}>
+                  {label}
+                  <input
+                    value={filters[key] || ''}
+                    onChange={(e) => {
+                      setFilters({ ...filters, [key]: e.target.value });
+                      setPage(0);
+                    }}
+                  />
+                </label>
+              ))}
               {filter(
                 'status',
                 'Statut',
@@ -171,6 +202,15 @@ export function ActionTable({
                   <button className="action-link" onClick={() => onOpen(a)}>
                     <small>{a.code}</small>
                     <strong>{a.description}</strong>
+                    {a.location && (
+                      <small>
+                        {a.location === 'AUTRE (à préciser)' ? a.location_other : a.location}
+                      </small>
+                    )}
+                    {a.mission_number && <small>Mission : {a.mission_number}</small>}
+                    {a.priority_reference && (
+                      <small>Réf. prioritaire : {a.priority_reference}</small>
+                    )}
                   </button>
                 </td>
                 <td>

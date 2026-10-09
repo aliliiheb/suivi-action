@@ -1,6 +1,8 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import locations from '../../server/plans/location-options.json' with { type: 'json' };
 import bcrypt from 'bcryptjs';
 import ExcelJS from 'exceljs';
 import AdmZip from 'adm-zip';
@@ -390,7 +392,7 @@ test('Excel : pourcentages natifs, dates et commentaires en lecture seule', asyn
   const sheet = wb.getWorksheet('Actions');
   assert.ok(sheet.getCell('H2').value instanceof Date);
   assert.equal(sheet.getCell('H2').numFmt, 'dd/mm/yyyy');
-  assert.equal(sheet.getCell('U2').value, 'Commentaire exporté');
+  assert.equal(sheet.getCell('Y2').value, 'Commentaire exporté');
   sheet.getCell('M2').value = 0.625;
   sheet.getCell('M2').numFmt = '0.0%';
   const parsed = await readFileRows('natif.xlsx', Buffer.from(await wb.xlsx.writeBuffer()));
@@ -443,7 +445,7 @@ test('Rejet des fichiers non compatibles et migrations versionnées', async () =
   const versions = (await db.query('SELECT version FROM plan_migrations ORDER BY version')).rows;
   assert.deepEqual(
     versions.map((v) => v.version),
-    [1, 2, 3],
+    [1, 2, 3, 4],
   );
 });
 
@@ -492,4 +494,179 @@ test('Deux échéances supplémentaires : validation, droits et aller-retour Exc
     previewImport(tx, u, { projectId: project.id, filename: 'ancien.xlsx', ...oldFile }),
   );
   assert.equal(preserved.entries[0].data.deadline_3, '2026-04-01');
+});
+
+test('Emplacements, mission et référence : validation, conservation et imports', async () => {
+  const data = clean(await current());
+  assert.equal(locations.length, 10);
+  for (const location of locations) {
+    assert.equal(
+      parse(actionSchema, {
+        ...data,
+        location,
+        location_other: location.startsWith('AUTRE') ? 'Site personnalisé' : '',
+      }).location,
+      location,
+    );
+  }
+  for (const change of [
+    { location: 'inconnu' },
+    { location: 'AUTRE (à préciser)', location_other: '  ' },
+    { location: 'FMS TUNISIE', location_other: 'Site' },
+    { mission_number: 'X'.repeat(121) },
+  ])
+    assert.throws(() => parse(actionSchema, { ...data, ...change }));
+  let saved = await make(chef, 'actions', {
+    ...data,
+    code: 'META',
+    location: 'AUTRE (à préciser)',
+    location_other: 'Atelier Nord',
+    mission_number: 'MIS-001',
+    priority_reference: 'PRI-007',
+  });
+  const legacy = clean(saved);
+  for (const key of ['location', 'location_other', 'mission_number', 'priority_reference'])
+    delete legacy[key];
+  saved = await exclusive(db, chef.id, (tx, u) =>
+    mutate(tx, u, 'actions', saved.id, legacy, saved.version),
+  );
+  assert.equal(saved.mission_number, 'MIS-001');
+  await assert.rejects(
+    () =>
+      exclusive(db, pilot.id, (tx, u) =>
+        mutate(
+          tx,
+          u,
+          'actions',
+          saved.id,
+          { ...clean(saved), mission_number: 'interdit' },
+          saved.version,
+        ),
+      ),
+    (e) => e.status === 403,
+  );
+  for (const format of ['xlsx', 'docx']) {
+    const parsed = await readFileRows(
+      `meta.${format}`,
+      await exportFile(format, project, [saved], [module], [pilot]),
+    );
+    const preview = await exclusive(db, chef.id, (tx, u) =>
+      previewImport(tx, u, { projectId: project.id, filename: `meta.${format}`, ...parsed }),
+    );
+    assert.deepEqual(
+      ['location', 'location_other', 'mission_number', 'priority_reference'].map(
+        (k) => preview.entries[0].data[k],
+      ),
+      ['AUTRE (à préciser)', 'Atelier Nord', 'MIS-001', 'PRI-007'],
+    );
+  }
+});
+
+test('Modules : rattachement, cycles indirects, cloisonnement, suppression et concurrence', async () => {
+  const root = await make(chef, 'modules', {
+    code: 'ROOT',
+    name: 'Principal',
+    description: '',
+    project_id: project.id,
+  });
+  const child = await make(chef, 'modules', {
+    code: 'CHILD',
+    name: 'Enfant',
+    description: '',
+    project_id: project.id,
+    parent_module_id: root.id,
+  });
+  const grandchild = await make(chef, 'modules', {
+    code: 'GRAND',
+    name: 'Petit enfant',
+    description: '',
+    project_id: project.id,
+    parent_module_id: child.id,
+  });
+  for (const parent_module_id of [root.id, grandchild.id, 'inconnu'])
+    await assert.rejects(
+      () =>
+        exclusive(db, chef.id, (tx, u) =>
+          mutate(tx, u, 'modules', root.id, { ...clean(root), parent_module_id }, root.version),
+        ),
+      (e) => e.status === 422,
+    );
+  await assert.rejects(
+    () =>
+      exclusive(db, chef.id, (tx, u) =>
+        mutate(tx, u, 'modules', root.id, null, root.version, 'delete'),
+      ),
+    (e) => e.status === 422,
+  );
+  await assert.rejects(
+    () => make(pilot, 'modules', { ...clean(root), code: 'PILOT' }),
+    (e) => e.status === 403,
+  );
+  const otherProject = await make(admin, 'projects', { ...clean(project), code: 'OTHER-PROJECT' });
+  await assert.rejects(
+    () =>
+      make(admin, 'modules', {
+        ...clean(root),
+        code: 'CROSS',
+        project_id: otherProject.id,
+        parent_module_id: root.id,
+      }),
+    (e) => e.status === 422,
+  );
+  const a = await make(chef, 'modules', { ...clean(root), code: 'CYCLE-A' });
+  const b = await make(chef, 'modules', { ...clean(root), code: 'CYCLE-B' });
+  const results = await Promise.allSettled([
+    exclusive(db, chef.id, (tx, u) =>
+      mutate(tx, u, 'modules', a.id, { ...clean(a), parent_module_id: b.id }, a.version),
+    ),
+    exclusive(db, chef.id, (tx, u) =>
+      mutate(tx, u, 'modules', b.id, { ...clean(b), parent_module_id: a.id }, b.version),
+    ),
+  ]);
+  assert.equal(results.filter((r) => r.status === 'fulfilled').length, 1);
+  const detached = await exclusive(db, chef.id, (tx, u) =>
+    mutate(tx, u, 'modules', child.id, { ...clean(child), parent_module_id: '' }, child.version),
+  );
+  assert.equal(detached.parent_module_id, '');
+  await exclusive(db, chef.id, (tx, u) =>
+    mutate(tx, u, 'modules', root.id, null, root.version, 'delete'),
+  );
+});
+
+test('Migration additive : données et versions historiques conservées', async () => {
+  const rollback = new Error('rollback-test');
+  await assert.rejects(
+    () =>
+      db.transaction(async (tx) => {
+        await tx.query('ALTER TABLE plan_modules DROP COLUMN parent_module_id CASCADE');
+        await tx.query(
+          "UPDATE plan_actions SET data=data-'location'-'location_other'-'mission_number'-'priority_reference'",
+        );
+        await tx.query("UPDATE plan_modules SET data=data-'parent_module_id'");
+        const oldActions = (await tx.query('SELECT * FROM plan_actions ORDER BY id')).rows;
+        const oldModules = (await tx.query('SELECT * FROM plan_modules ORDER BY id')).rows;
+        const sql = await readFile(
+          new URL(
+            '../../server/plans/migrations/004_action_metadata_module_parent.sql',
+            import.meta.url,
+          ),
+          'utf8',
+        );
+        for (const statement of sql.split(';').filter((s) => s.trim())) await tx.query(statement);
+        const actions = (await tx.query('SELECT * FROM plan_actions ORDER BY id')).rows;
+        const modules = (await tx.query('SELECT * FROM plan_modules ORDER BY id')).rows;
+        assert.equal(actions.length, oldActions.length);
+        actions.forEach((row, i) => {
+          assert.equal(row.version, oldActions[i].version);
+          for (const [k, v] of Object.entries(oldActions[i].data)) assert.deepEqual(row.data[k], v);
+          assert.equal(row.data.location, '');
+        });
+        modules.forEach((row, i) => {
+          assert.equal(row.version, oldModules[i].version);
+          assert.deepEqual(row.data, { ...oldModules[i].data, parent_module_id: '' });
+        });
+        throw rollback;
+      }),
+    (e) => e === rollback,
+  );
 });

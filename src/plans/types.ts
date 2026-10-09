@@ -22,6 +22,7 @@ export type Project = {
   planned_end: string;
 };
 export type Module = {
+  parent_module_id?: string;
   id: string;
   version: number;
   code: string;
@@ -37,6 +38,10 @@ export type Corrective = {
   status: Status;
 };
 export type Action = {
+  location?: string;
+  location_other?: string;
+  mission_number?: string;
+  priority_reference?: string;
   id: string;
   version: number;
   code: string;

@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { api } from './api';
 import type { State, Kind, Entity, Action } from './types';
 import { statuses, roles } from './types';
+import locations from '../../server/plans/location-options.json';
 type Props = {
   kind: Kind;
   value?: Entity;
@@ -24,6 +25,27 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const data = { ...defaults, ...value } as Record<string, unknown>;
+  const [location, setLocation] = useState(String(data.location || ''));
+  const [selectedProject, setSelectedProject] = useState(
+    String(
+      data.project_id ||
+        state.projects.find((p) => state.user.role === 'ADMIN' || p.manager_id === state.user.id)
+          ?.id ||
+        '',
+    ),
+  );
+  const [parentId, setParentId] = useState(String(data.parent_module_id || ''));
+  const parentOptions = state.modules.filter((candidate) => {
+    if (candidate.project_id !== selectedProject) return false;
+    const seen = new Set<string>();
+    let current: typeof candidate | undefined = candidate;
+    while (current) {
+      if (current.id === value?.id || seen.has(current.id)) return false;
+      seen.add(current.id);
+      current = state.modules.find((m) => m.id === current?.parent_module_id);
+    }
+    return true;
+  });
   const pilot = kind === 'actions' && state.user.role === 'PILOTE';
   useEffect(() => {
     const dialog = ref.current;
@@ -45,7 +67,15 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
         required={required}
         readOnly={readOnly}
         defaultValue={String(data[name] ?? '')}
-        maxLength={type === 'password' ? 72 : 2000}
+        maxLength={
+          type === 'password'
+            ? 72
+            : name === 'location_other'
+              ? 200
+              : ['mission_number', 'priority_reference'].includes(name)
+                ? 120
+                : 2000
+        }
         min={name === 'progress' ? 0 : undefined}
         max={name === 'progress' ? 100 : undefined}
         step={type === 'number' ? 'any' : undefined}
@@ -65,6 +95,14 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
         aria-label={label}
         name={name}
         defaultValue={String(data[name] ?? options[0]?.id ?? '')}
+        onChange={
+          name === 'project_id'
+            ? (e) => {
+                setSelectedProject(e.target.value);
+                setParentId('');
+              }
+            : undefined
+        }
         disabled={disabled}
         required
       >
@@ -105,6 +143,8 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
       if (!payload.password) delete payload.password;
     }
     if (kind === 'actions') {
+      payload.location = location;
+      payload.location_other = location === 'AUTRE (à préciser)' ? f.get('location_other') : '';
       for (const k of ['progress', 'target', 'achieved'])
         payload[k] = payload[k] === '' ? (k === 'progress' ? 0 : null) : Number(payload[k]);
       payload.corrective = (value as Action)?.corrective || [];
@@ -194,6 +234,25 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
                 Boolean(value),
               )}
               {textarea('description', 'Description')}
+              <label className="wide">
+                Référence Module Principal
+                <select
+                  name="parent_module_id"
+                  value={parentId}
+                  onChange={(e) => setParentId(e.target.value)}
+                >
+                  <option value="">Aucun</option>
+                  {parentOptions.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.code} — {m.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="form-hint wide">
+                Modules du même projet. Le module actuel et ses descendants ne peuvent pas être
+                choisis.
+              </p>
             </>
           )}
           {kind === 'actions' && (
@@ -212,6 +271,26 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
               )}
               {textarea('description', 'Description de l’action', pilot)}
               {textarea('objective', 'Objectif attendu', pilot)}
+              <label>
+                Emplacement
+                <select
+                  name="location"
+                  value={location}
+                  disabled={pilot}
+                  onChange={(e) => setLocation(e.target.value)}
+                >
+                  <option value="">Non renseigné</option>
+                  {locations.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {location === 'AUTRE (à préciser)' &&
+                input('location_other', 'Précisez l’emplacement', 'text', true, pilot)}
+              {input('mission_number', 'N° Mission', 'text', false, pilot)}
+              {input('priority_reference', 'Réf. Action Prioritaire', 'text', false, pilot)}
               {select(
                 'pilot_id',
                 'Pilote responsable',

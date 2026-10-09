@@ -404,6 +404,15 @@ export function PlansApp() {
                           <span className="eyebrow">{m.code}</span>
                           <h3>{m.name}</h3>
                           <p>{m.description}</p>
+                          <p className="muted">
+                            Module principal :{' '}
+                            {m.parent_module_id
+                              ? state.modules
+                                  .filter((parent) => parent.id === m.parent_module_id)
+                                  .map((parent) => `${parent.code} — ${parent.name}`)
+                                  .join('') || 'Indisponible'
+                              : 'Aucun'}
+                          </p>
                         </div>
                         {manages(state, selected) && (
                           <div className="inline">

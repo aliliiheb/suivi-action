@@ -109,7 +109,24 @@ export async function mutate(tx, user, kind, id, input, version, operation = 'up
     fail(409, 'Cet élément a changé. Rechargez-le avant de réappliquer vos modifications.', {
       current: before,
     });
-  const data = operation === 'delete' ? before : parse(schemas[kind], input);
+  // Older open clients must not clear fields introduced after their page was loaded.
+  const addedKeys =
+    kind === 'actions'
+      ? [
+          'deadline_2',
+          'deadline_3',
+          'location',
+          'location_other',
+          'mission_number',
+          'priority_reference',
+        ]
+      : kind === 'modules'
+        ? ['parent_module_id']
+        : [];
+  const preserved = Object.fromEntries(
+    addedKeys.filter((key) => before && before[key] !== undefined).map((key) => [key, before[key]]),
+  );
+  const data = operation === 'delete' ? before : parse(schemas[kind], { ...preserved, ...input });
   if (before) authorize(state, kind, before, operation);
   else authorize(state, kind, data, 'create');
   if (kind === 'projects' && user.role === 'CHEF' && data.manager_id !== user.id)
@@ -136,6 +153,20 @@ export async function mutate(tx, user, kind, id, input, version, operation = 'up
       if (before && data.project_id !== before.project_id)
         fail(422, 'Le déplacement de modules entre projets n’est pas permis.');
       authorize(state, kind, data, 'create');
+      const visited = new Set(id ? [id] : []);
+      let parentId = data.parent_module_id;
+      while (parentId) {
+        if (visited.has(parentId))
+          fail(
+            422,
+            'Un module ne peut pas être son propre parent ni créer une relation circulaire.',
+          );
+        visited.add(parentId);
+        const parent = state.modules.find((m) => m.id === parentId);
+        if (!parent || parent.project_id !== data.project_id)
+          fail(422, 'Le module principal doit appartenir au même projet et être accessible.');
+        parentId = parent.parent_module_id;
+      }
     }
     if (kind === 'actions') {
       if (before && data.module_id !== before.module_id)
@@ -211,6 +242,8 @@ export async function mutate(tx, user, kind, id, input, version, operation = 'up
     return after;
   }
   if (operation === 'delete') {
+    if (kind === 'modules' && state.modules.some((m) => m.parent_module_id === id))
+      fail(422, 'Détachez les sous-modules avant de supprimer leur module principal.');
     await tx.query(`DELETE FROM plan_${kind} WHERE id=$1`, [id]);
     await audit(
       tx,

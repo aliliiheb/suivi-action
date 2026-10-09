@@ -34,6 +34,10 @@ export const columns = {
   corrective: 'Actions correctives JSON',
   deadline_2: '2e échéance',
   deadline_3: '3e échéance',
+  location: 'Emplacement',
+  location_other: 'Autre emplacement',
+  mission_number: 'N° Mission',
+  priority_reference: 'Réf. Action Prioritaire',
 };
 const values = (a) =>
   Object.keys(columns).map((k) => (k === 'corrective' ? JSON.stringify(a[k] || []) : (a[k] ?? '')));

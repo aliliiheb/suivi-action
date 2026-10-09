@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import locations from './location-options.json' with { type: 'json' };
 export const statuses = ['À faire', 'En cours', 'Terminée', 'Bloquée'];
 const text = z.string().trim().min(1, 'Champ obligatoire').max(2000);
 const short = z.string().trim().min(1, 'Champ obligatoire').max(120);
@@ -17,6 +18,13 @@ export const actionSchema = z
     code: short,
     description: text,
     objective: optionalText,
+    location: z
+      .string()
+      .refine((v) => !v || locations.includes(v), 'Sélectionnez un emplacement proposé.')
+      .default(''),
+    location_other: z.string().trim().max(200).default(''),
+    mission_number: z.string().trim().max(120).default(''),
+    priority_reference: z.string().trim().max(120).default(''),
     pilot_id: short,
     module_id: short,
     planned_start: date,
@@ -47,6 +55,10 @@ export const actionSchema = z
   .strict()
   .superRefine((v, ctx) => {
     const issue = (path, message) => ctx.addIssue({ code: 'custom', path: [path], message });
+    if (v.location === 'AUTRE (à préciser)' && !v.location_other)
+      issue('location_other', 'Précisez votre emplacement.');
+    if (v.location !== 'AUTRE (à préciser)' && v.location_other)
+      issue('location_other', 'L’emplacement personnalisé nécessite le choix AUTRE (à préciser).');
     if (v.planned_end < v.planned_start)
       issue('planned_end', 'La fin prévue précède le début prévu.');
     if (v.deadline_2 && v.deadline_2 < v.planned_end)
@@ -86,7 +98,13 @@ export const schemas = {
       path: ['planned_end'],
     }),
   modules: z
-    .object({ code: short, name: short, description: optionalText, project_id: short })
+    .object({
+      code: short,
+      name: short,
+      description: optionalText,
+      project_id: short,
+      parent_module_id: z.string().max(120).default(''),
+    })
     .strict(),
   actions: actionSchema,
   users: z
