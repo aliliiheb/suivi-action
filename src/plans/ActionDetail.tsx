@@ -5,6 +5,8 @@ import { api } from './api';
 import type { Action, Audit, State, Corrective } from './types';
 import { dateFR, statuses, projectOf, manages, isLate } from './types';
 import { Badge } from './ActionTable';
+import { CopyProvenance } from './CopyProvenance';
+import type { Kind } from './types';
 export function ActionDetail({
   state,
   action,
@@ -12,6 +14,8 @@ export function ActionDetail({
   onEdit,
   onDelete,
   onRefresh,
+  onDuplicate,
+  onSource,
 }: {
   state: State;
   action: Action;
@@ -19,6 +23,8 @@ export function ActionDetail({
   onEdit: () => void;
   onDelete: () => void;
   onRefresh: () => Promise<void>;
+  onDuplicate: () => void;
+  onSource: (kind: Kind, id: string) => void;
 }) {
   const [history, setHistory] = useState<Audit[]>([]);
   const [error, setError] = useState('');
@@ -88,6 +94,11 @@ export function ActionDetail({
         </div>
         {editable && (
           <div className="inline">
+            {manages(state, project) && (
+              <button className="secondary" onClick={onDuplicate}>
+                Dupliquer l’action
+              </button>
+            )}
             <button className="primary" onClick={onEdit}>
               Modifier l’action
             </button>
@@ -99,6 +110,7 @@ export function ActionDetail({
           </div>
         )}
       </header>
+      <CopyProvenance kind="actions" id={action.id} onSource={onSource} />
       {error && (
         <p className="error" role="alert">
           {error}

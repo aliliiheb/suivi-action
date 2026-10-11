@@ -19,6 +19,14 @@ import {
 } from '../../server/plans/rules.mjs';
 import { exportFile, readFileRows } from '../../server/plans/files.mjs';
 import { previewImport, commitImport } from '../../server/plans/imports.mjs';
+import { duplicate } from '../../server/plans/duplication.mjs';
+import {
+  addDocument,
+  changeDocument,
+  getDocument,
+  validateFile,
+  quota,
+} from '../../server/plans/documents.mjs';
 import {
   normalizeDate,
   normalizeNumber,
@@ -445,7 +453,7 @@ test('Rejet des fichiers non compatibles et migrations versionnées', async () =
   const versions = (await db.query('SELECT version FROM plan_migrations ORDER BY version')).rows;
   assert.deepEqual(
     versions.map((v) => v.version),
-    [1, 2, 3, 4],
+    [1, 2, 3, 4, 5],
   );
 });
 
@@ -498,7 +506,7 @@ test('Deux échéances supplémentaires : validation, droits et aller-retour Exc
 
 test('Emplacements, mission et référence : validation, conservation et imports', async () => {
   const data = clean(await current());
-  assert.equal(locations.length, 10);
+  assert.equal(locations.length, 11);
   for (const location of locations) {
     assert.equal(
       parse(actionSchema, {
@@ -669,4 +677,331 @@ test('Migration additive : données et versions historiques conservées', async 
       }),
     (e) => e === rollback,
   );
+});
+
+const clone = (actor, kind, source, data, options = {}) =>
+  exclusive(db, actor.id, (tx, user) =>
+    duplicate(tx, user, kind, source.id, {
+      request_id: randomUUID(),
+      version: source.version,
+      data,
+      ...options,
+    }),
+  );
+const pdf = Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF');
+test('Documents : formats, taille, droits, renommage, indépendance et suppression', async () => {
+  assert.equal(validateFile('rapport.pdf', pdf), 'application/pdf');
+  for (const ext of ['doc', 'xls', 'ppt'])
+    assert.ok(validateFile(`rapport.${ext}`, Buffer.from('d0cf11e0a1b11ae1', 'hex')));
+  for (const [ext, root] of [
+    ['docx', 'word/'],
+    ['xlsx', 'xl/'],
+    ['pptx', 'ppt/'],
+  ]) {
+    const zip = new AdmZip();
+    zip.addFile('[Content_Types].xml', Buffer.from('<Types/>'));
+    zip.addFile(root + 'document.xml', Buffer.from('<document/>'));
+    assert.ok(validateFile(`rapport.${ext}`, zip.toBuffer()));
+    assert.throws(() => validateFile('faux.docx', pdf));
+  }
+  assert.ok(validateFile('photo.png', Buffer.from('89504e470d0a1a0a', 'hex')));
+  for (const ext of ['jpg', 'jpeg'])
+    assert.ok(validateFile(`photo.${ext}`, Buffer.from('ffd8ffe0', 'hex')));
+  assert.ok(validateFile('photo.webp', Buffer.from('RIFFxxxxWEBP')));
+  for (const filename of ['virus.exe', 'image.svg', '../secret.pdf', 'fausse.png'])
+    assert.throws(() => validateFile(filename, pdf));
+  assert.throws(() => validateFile('grand.pdf', Buffer.alloc(5242881)));
+  assert.throws(() => validateFile('vide.pdf', Buffer.alloc(0)));
+  const data = {
+    filename: 'rapport.pdf',
+    base64: pdf.toString('base64'),
+    request_id: randomUUID(),
+  };
+  const doc = await exclusive(db, chef.id, (tx, u) => addDocument(tx, u, project.id, data));
+  const repeated = await exclusive(db, chef.id, (tx, u) => addDocument(tx, u, project.id, data));
+  assert.equal(doc.id, repeated.id);
+  await assert.rejects(
+    () =>
+      exclusive(db, chef.id, (tx, u) =>
+        addDocument(tx, u, project.id, { ...data, filename: 'autre.pdf' }),
+      ),
+    (e) => e.status === 409,
+  );
+  assert.equal((await getDocument(db, pilot, doc.id)).filename, 'rapport.pdf');
+  await assert.rejects(
+    () => getDocument(db, outsider, doc.id),
+    (e) => e.status === 404,
+  );
+  await assert.rejects(
+    () =>
+      exclusive(db, pilot.id, (tx, u) =>
+        addDocument(tx, u, project.id, { ...data, request_id: randomUUID() }),
+      ),
+    (e) => e.status === 403,
+  );
+  await assert.rejects(
+    () => exclusive(db, pilot.id, (tx, u) => changeDocument(tx, u, doc.id, { version: 1 }, true)),
+    (e) => e.status === 403,
+  );
+  await exclusive(db, chef.id, (tx, u) =>
+    changeDocument(tx, u, doc.id, { version: 1, title: 'Nouveau titre' }),
+  );
+  await assert.rejects(
+    () =>
+      exclusive(db, chef.id, (tx, u) =>
+        changeDocument(tx, u, doc.id, { version: 1, title: 'Conflit' }),
+      ),
+    (e) => e.status === 409,
+  );
+  const before = (await snapshot(db, admin)).projects.find((p) => p.id === project.id);
+  const copy = await clone(
+    admin,
+    'projects',
+    before,
+    { ...clean(before), code: 'P-DOC-COPY' },
+    { copy_documents: true },
+  );
+  const copied = (await db.query('SELECT * FROM plan_documents WHERE project_id=$1', [copy.id]))
+    .rows[0];
+  assert.notEqual(copied.id, doc.id);
+  assert.deepEqual(Buffer.from(copied.content), pdf);
+  assert.equal(copied.title, 'Nouveau titre');
+  await exclusive(db, admin.id, (tx, u) => changeDocument(tx, u, copied.id, { version: 1 }, true));
+  assert.ok(await getDocument(db, chef, doc.id));
+  await exclusive(db, chef.id, (tx, u) => changeDocument(tx, u, doc.id, { version: 2 }, true));
+  await assert.rejects(
+    () => getDocument(db, chef, doc.id),
+    (e) => e.status === 404,
+  );
+  await assert.rejects(
+    () => quota(db, project.id, 51 * 1024 * 1024),
+    (e) => e.status === 422,
+  );
+  await assert.rejects(
+    () =>
+      quota(
+        { query: async () => ({ rows: [{ total: 200 * 1024 * 1024, project: 0 }] }) },
+        project.id,
+        1,
+      ),
+    (e) => e.status === 422,
+  );
+});
+test('Duplication : nouvelle société, module sans actions, réinitialisation et traçabilité', async () => {
+  const state = await snapshot(db, admin);
+  const source = state.projects.find((p) => p.id === project.id);
+  const secondClient = await make(admin, 'clients', { code: 'C-DUP', name: 'SBC', contact: '' });
+  const newProject = await clone(admin, 'projects', source, {
+    ...clean(source),
+    code: 'P-DUP',
+    client_id: secondClient.id,
+  });
+  assert.notEqual(newProject.id, source.id);
+  assert.equal(newProject.client_id, secondClient.id);
+  assert.equal(
+    (await db.query('SELECT id FROM plan_documents WHERE project_id=$1', [newProject.id])).rows
+      .length,
+    0,
+  );
+  const sourceModule = state.modules.find((m) => m.id === module.id);
+  const newModule = await clone(admin, 'modules', sourceModule, {
+    ...clean(sourceModule),
+    project_id: newProject.id,
+    code: 'M-DUP',
+  });
+  assert.equal(
+    (await db.query('SELECT id FROM plan_actions WHERE module_id=$1', [newModule.id])).rows.length,
+    0,
+  );
+  const sourceAction = state.actions.find((a) => a.id === action.id);
+  const newAction = await clone(admin, 'actions', sourceAction, {
+    ...clean(sourceAction),
+    module_id: newModule.id,
+    code: 'A-DUP',
+    status: 'Terminée',
+    progress: 100,
+    actual_start: '2026-01-01',
+    actual_end: '2026-01-02',
+    achieved: 12,
+    cause: 'Ne pas copier',
+  });
+  assert.equal(newAction.status, 'À faire');
+  assert.equal(newAction.progress, 0);
+  assert.equal(newAction.actual_start, '');
+  assert.equal(newAction.actual_end, '');
+  assert.equal(newAction.achieved, null);
+  assert.equal(newAction.cause, '');
+  assert.deepEqual(newAction.corrective, []);
+  assert.equal(newAction.planned_start, sourceAction.planned_start);
+  const trace = (
+    await db.query('SELECT * FROM plan_duplications WHERE target_id=$1', [newAction.id])
+  ).rows[0];
+  assert.equal(trace.source_id, sourceAction.id);
+  assert.equal(trace.actor_id, admin.id);
+  assert.ok(trace.at);
+  assert.equal(
+    (
+      await db.query("SELECT id FROM plan_audit WHERE entity_id=$1 AND operation='Commentaire'", [
+        newAction.id,
+      ])
+    ).rows.length,
+    0,
+  );
+  await exclusive(db, admin.id, (tx, u) =>
+    mutate(
+      tx,
+      u,
+      'actions',
+      newAction.id,
+      { ...clean(newAction), description: 'Copie modifiée' },
+      1,
+    ),
+  );
+  const after = await snapshot(db, admin);
+  assert.deepEqual(
+    after.actions.find((a) => a.id === action.id),
+    sourceAction,
+  );
+  assert.deepEqual(
+    after.projects.find((p) => p.id === project.id),
+    source,
+  );
+  assert.deepEqual(
+    after.modules.find((m) => m.id === module.id),
+    sourceModule,
+  );
+});
+test('Duplication : actions optionnelles, parent et pilote adaptés, transaction et double clic', async () => {
+  const state = await snapshot(db, admin);
+  const source = state.modules.find((m) => m.id === module.id);
+  const dest = await make(admin, 'projects', {
+    ...clean(project),
+    code: 'P-DEST',
+    members: [chef.id],
+  });
+  const body = {
+    request_id: randomUUID(),
+    version: source.version,
+    data: { ...clean(source), code: 'M-DEST', project_id: dest.id, parent_module_id: '' },
+    copy_actions: true,
+  };
+  const [first, second] = await Promise.all(
+    [1, 2].map(() =>
+      exclusive(db, admin.id, (tx, u) => duplicate(tx, u, 'modules', source.id, body)),
+    ),
+  );
+  assert.equal(first.id, second.id);
+  const after = await snapshot(db, admin);
+  const actions = after.actions.filter((a) => a.module_id === first.id);
+  assert.equal(actions.length, state.actions.filter((a) => a.module_id === source.id).length);
+  assert.ok(
+    actions.every((a) => a.progress === 0 && a.status === 'À faire' && a.pilot_id === chef.id),
+  );
+  await assert.rejects(
+    () =>
+      exclusive(db, admin.id, (tx, u) =>
+        duplicate(tx, u, 'modules', source.id, { ...body, data: { ...body.data, code: 'OTHER' } }),
+      ),
+    (e) => e.status === 409,
+  );
+  const count = (await snapshot(db, admin)).modules.length;
+  await assert.rejects(
+    () =>
+      clone(admin, 'modules', source, {
+        ...clean(source),
+        code: 'INVALID',
+        project_id: dest.id,
+        parent_module_id: source.id,
+      }),
+    (e) => e.status === 422,
+  );
+  assert.equal((await snapshot(db, admin)).modules.length, count);
+  await assert.rejects(
+    () => clone(pilot, 'modules', source, clean(source)),
+    (e) => e.status === 403,
+  );
+  await assert.rejects(
+    () => clone(outsider, 'modules', source, clean(source)),
+    (e) => e.status === 404,
+  );
+  await assert.rejects(
+    () => clone(chef, 'modules', source, { ...clean(source), project_id: 'missing', code: 'NO' }),
+    (e) => e.status === 403,
+  );
+  await assert.rejects(
+    () => clone(admin, 'modules', { ...source, version: 999 }, clean(source)),
+    (e) => e.status === 409,
+  );
+});
+test('API documents : authentification, CSRF, téléchargement exact et aperçu privé', async () => {
+  const session = await fetch(base + '/session');
+  let cookie = session.headers.get('set-cookie').split(';')[0];
+  let { csrf } = await session.json();
+  const logged = await fetch(base + '/login', {
+    method: 'POST',
+    headers: { cookie, 'Content-Type': 'application/json', 'x-csrf-token': csrf },
+    body: JSON.stringify({ email: 'admin@test.fr', password }),
+  });
+  assert.equal(logged.status, 200);
+  cookie = logged.headers.get('set-cookie').split(';')[0];
+  csrf = (await logged.json()).csrf;
+  const headers = { cookie, 'Content-Type': 'application/json', 'x-csrf-token': csrf };
+  const route = base + `/projects/${project.id}/documents`;
+  assert.equal((await fetch(route)).status, 401);
+  assert.equal(
+    (
+      await fetch(route, {
+        method: 'POST',
+        headers: { cookie, 'Content-Type': 'application/json' },
+        body: '{}',
+      })
+    ).status,
+    403,
+  );
+  const created = await fetch(route, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      filename: 'rapport été.pdf',
+      base64: pdf.toString('base64'),
+      request_id: randomUUID(),
+    }),
+  });
+  assert.equal(created.status, 201);
+  const doc = await created.json();
+  const download = await fetch(base + `/documents/${doc.id}/content`, { headers });
+  assert.equal(download.status, 200);
+  assert.match(download.headers.get('content-disposition'), /^attachment/);
+  assert.equal(download.headers.get('cache-control'), 'no-store');
+  assert.deepEqual(Buffer.from(await download.arrayBuffer()), pdf);
+  const preview = await fetch(base + `/documents/${doc.id}/content?preview=1`, { headers });
+  assert.equal(preview.status, 200);
+  assert.match(preview.headers.get('content-disposition'), /^inline/);
+  assert.match(preview.headers.get('content-security-policy'), /sandbox/);
+  assert.equal((await fetch(base + `/documents/${doc.id}/content`)).status, 401);
+  const listed = await (await fetch(route, { headers })).json();
+  assert.equal(listed[0].author, 'Admin');
+  assert.equal(listed[0].content, undefined);
+  assert.equal(
+    (
+      await fetch(base + `/documents/${doc.id}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({ title: 'Titre', version: 1 }),
+      })
+    ).status,
+    200,
+  );
+  assert.equal(
+    (
+      await fetch(base + `/documents/${doc.id}`, {
+        method: 'DELETE',
+        headers,
+        body: JSON.stringify({ version: 2 }),
+      })
+    ).status,
+    200,
+  );
+  assert.equal((await fetch(base + `/documents/${doc.id}/content`, { headers })).status, 404);
+  await fetch(base + '/logout', { method: 'POST', headers });
 });

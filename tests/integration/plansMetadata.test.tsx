@@ -100,7 +100,7 @@ const state: State = {
   actions: [action],
 };
 describe('Nouveaux champs FMS', () => {
-  it('propose les dix emplacements et affiche AUTRE avec saisie obligatoire', async () => {
+  it('propose les onze emplacements dont FSP et affiche AUTRE avec saisie obligatoire', async () => {
     render(
       <EntityEditor
         kind="actions"
@@ -111,12 +111,15 @@ describe('Nouveaux champs FMS', () => {
       />,
     );
     const select = screen.getByLabelText('Emplacement');
-    expect(within(select).getAllByRole('option')).toHaveLength(11);
+    expect(within(select).getAllByRole('option')).toHaveLength(12);
+    expect(within(select).getByRole('option', { name: 'FSP ALGERIE' })).toBeInTheDocument();
     expect(screen.getByLabelText('Précisez l’emplacement')).toBeRequired();
     expect(screen.getByLabelText('Précisez l’emplacement')).toHaveValue('Atelier Nord');
     fireEvent.change(select, { target: { value: 'FMS TUNISIE' } });
     expect(screen.queryByLabelText('Précisez l’emplacement')).toBeNull();
-    await act(async () => { fireEvent.submit(screen.getByRole('button', { name: 'Enregistrer' }).closest('form')!); });
+    await act(async () => {
+      fireEvent.submit(screen.getByRole('button', { name: 'Enregistrer' }).closest('form')!);
+    });
     expect(api).toHaveBeenCalledWith(
       '/actions/a',
       'PUT',
@@ -175,5 +178,75 @@ describe('Nouveaux champs FMS', () => {
         .getAllByRole('option')
         .map((o) => o.textContent),
     ).toEqual(['Aucun', 'R — Racine']);
+  });
+  it('duplique une action dans un autre module et bloque le double envoi', async () => {
+    let resolve!: (value: unknown) => void;
+    vi.mocked(api).mockImplementationOnce(
+      () =>
+        new Promise((r) => {
+          resolve = r;
+        }),
+    );
+    render(
+      <EntityEditor
+        kind="actions"
+        source={action}
+        defaults={{ ...action, code: 'COPIE' }}
+        state={state}
+        onClose={() => {}}
+        onSaved={async () => {}}
+      />,
+    );
+    expect(screen.getByText('Nouvelle fiche indépendante')).toBeVisible();
+    expect(screen.getByLabelText('Module')).not.toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Module'), { target: { value: 'root' } });
+    fireEvent.click(
+      screen.getByLabelText('Conserver les dates prévisionnelles (modifiable ci-dessous)'),
+    );
+    expect(screen.getByLabelText('Début prévu')).toHaveValue('');
+    fireEvent.change(screen.getByLabelText('Début prévu'), { target: { value: '2027-01-01' } });
+    fireEvent.change(screen.getByLabelText('Fin prévue'), { target: { value: '2027-02-01' } });
+    const form = screen.getByRole('button', { name: 'Enregistrer la copie' }).closest('form')!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    expect(api).toHaveBeenCalledTimes(1);
+    expect(api).toHaveBeenCalledWith(
+      '/actions/a/duplicate',
+      'POST',
+      expect.objectContaining({
+        request_id: expect.any(String),
+        data: expect.objectContaining({
+          module_id: 'root',
+          status: 'À faire',
+          progress: 0,
+          planned_start: '2027-01-01',
+          achieved: null,
+        }),
+      }),
+    );
+    await act(async () => resolve({ id: 'copy' }));
+  });
+  it('réinitialise le module principal quand le projet de destination change', () => {
+    const next = {
+      ...state,
+      projects: [...state.projects, { ...state.projects[0]!, id: 'p2', name: 'Autre projet' }],
+    };
+    render(
+      <EntityEditor
+        kind="modules"
+        source={state.modules[1]}
+        defaults={{ ...state.modules[1], code: 'COPIE' }}
+        state={next}
+        onClose={() => {}}
+        onSaved={async () => {}}
+      />,
+    );
+    expect(screen.getByLabelText('Projet')).not.toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Projet'), { target: { value: 'p2' } });
+    expect(screen.getByLabelText('Référence Module Principal')).toHaveValue('');
+    expect(
+      within(screen.getByLabelText('Référence Module Principal')).getAllByRole('option'),
+    ).toHaveLength(1);
+    expect(screen.getByLabelText(/Copier également les actions/)).not.toBeChecked();
   });
 });

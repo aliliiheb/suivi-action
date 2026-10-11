@@ -12,6 +12,14 @@ import { fail, parse } from './rules.mjs';
 import { snapshot, userById, exclusive, mutate, audit, authorize } from './service.mjs';
 import { exportFile, readFileRows, columns } from './files.mjs';
 import { previewImport, commitImport } from './imports.mjs';
+import { duplicate } from './duplication.mjs';
+import {
+  addDocument,
+  changeDocument,
+  getDocument,
+  projectAccess,
+  documentColumns,
+} from './documents.mjs';
 class SqlSessions extends session.Store {
   constructor(db) {
     super();
@@ -169,6 +177,83 @@ export function createApp(
     });
   });
   api.get('/state', async (req, res) => res.json(await snapshot(db, req.user)));
+  api.get('/projects/:id/documents', async (req, res) => {
+    await projectAccess(db, req.user, req.params.id);
+    res.json(
+      (
+        await db.query(
+          `SELECT ${documentColumns} FROM plan_documents d JOIN plan_users u ON u.id=d.uploaded_by WHERE project_id=$1 ORDER BY at DESC,id`,
+          [req.params.id],
+        )
+      ).rows,
+    );
+  });
+  api.post('/projects/:id/documents', async (req, res) =>
+    res
+      .status(201)
+      .json(
+        await exclusive(db, req.user.id, (tx, user) =>
+          addDocument(tx, user, req.params.id, req.body),
+        ),
+      ),
+  );
+  api.get('/documents/:id/content', async (req, res) => {
+    const row = await getDocument(db, req.user, req.params.id);
+    const content = (await db.query('SELECT content FROM plan_documents WHERE id=$1', [row.id]))
+      .rows[0]?.content;
+    if (!content) fail(404, 'Document supprimé.');
+    const inline =
+      req.query.preview === '1' &&
+      (row.mime === 'application/pdf' || row.mime.startsWith('image/'));
+    res.set('Content-Type', row.mime);
+    res.set(
+      'Content-Disposition',
+      `${inline ? 'inline' : 'attachment'}; filename="document.${row.filename.split('.').pop()}"; filename*=UTF-8''${encodeURIComponent(row.filename).replace(/['()*]/g, (c) => '%' + c.charCodeAt(0).toString(16))}`,
+    );
+    res.set('Content-Security-Policy', "default-src 'none'; sandbox");
+    res.send(Buffer.from(content));
+  });
+  api.put('/documents/:id', async (req, res) =>
+    res.json(
+      await exclusive(db, req.user.id, (tx, user) =>
+        changeDocument(tx, user, req.params.id, req.body),
+      ),
+    ),
+  );
+  api.delete('/documents/:id', async (req, res) =>
+    res.json(
+      await exclusive(db, req.user.id, (tx, user) =>
+        changeDocument(tx, user, req.params.id, req.body, true),
+      ),
+    ),
+  );
+  api.post('/:kind/:id/duplicate', async (req, res) =>
+    res
+      .status(201)
+      .json(
+        await exclusive(db, req.user.id, (tx, user) =>
+          duplicate(tx, user, req.params.kind, req.params.id, req.body),
+        ),
+      ),
+  );
+  api.get('/:kind/:id/provenance', async (req, res) => {
+    if (!['projects', 'modules', 'actions'].includes(req.params.kind))
+      fail(404, 'Ressource inconnue.');
+    const state = await snapshot(db, req.user);
+    if (!state[req.params.kind].some((r) => r.id === req.params.id))
+      fail(404, 'Fiche inaccessible.');
+    const row = (
+      await db.query(
+        'SELECT d.kind,d.source_id,d.target_id,d.at,u.name AS author FROM plan_duplications d JOIN plan_users u ON u.id=d.actor_id WHERE d.target_id=$1 AND d.kind=$2',
+        [req.params.id, req.params.kind],
+      )
+    ).rows[0];
+    res.json(
+      row
+        ? { ...row, source_available: state[req.params.kind].some((r) => r.id === row.source_id) }
+        : null,
+    );
+  });
   api.get('/actions/:id/history', async (req, res) => {
     const state = await snapshot(db, req.user);
     if (!state.actions.some((a) => a.id === req.params.id)) fail(404, 'Action inaccessible.');

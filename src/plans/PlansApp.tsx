@@ -27,7 +27,9 @@ import { EntityEditor } from './EntityEditor';
 import { ActionTable } from './ActionTable';
 import { ActionDetail } from './ActionDetail';
 import { Transfers } from './Transfers';
-type Editor = { kind: Kind; value?: Entity; defaults?: Record<string, unknown> };
+import { ProjectDocuments } from './ProjectDocuments';
+import { CopyProvenance } from './CopyProvenance';
+type Editor = { kind: Kind; value?: Entity; source?: Entity; defaults?: Record<string, unknown> };
 const navigation = [
   ['dashboard', 'Tableau de bord', LayoutDashboard],
   ['clients', 'Clients', Building2],
@@ -50,6 +52,12 @@ export function PlansApp() {
   const [actionId, setActionId] = useState('');
   const [editor, setEditor] = useState<Editor | null>(null);
   const [menu, setMenu] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [moduleFocus, setModuleFocus] = useState('');
+  useEffect(() => {
+    if (moduleFocus)
+      document.getElementById(`module-${moduleFocus}`)?.scrollIntoView({ block: 'start' });
+  }, [moduleFocus, projectId]);
   const refresh = useCallback(async () => {
     try {
       const next = await api<State>('/state');
@@ -141,8 +149,52 @@ export function PlansApp() {
     setActionId(a.id);
     setPage('actions');
   };
+  const openSource = (kind: Kind, id: string) => {
+    setActionId('');
+    if (kind === 'actions') {
+      setActionId(id);
+      setPage('actions');
+    } else {
+      setPage('projects');
+      setProjectId(
+        kind === 'projects' ? id : state.modules.find((m) => m.id === id)?.project_id || '',
+      );
+      setModuleFocus(kind === 'modules' ? id : '');
+    }
+  };
+  const startCopy = (kind: Kind, source: Entity) => {
+    const { id: _id, version: _version, ...original } = source;
+    const code =
+      'code' in original
+        ? `${original.code.slice(0, 96)}-COPIE-${crypto.randomUUID().slice(0, 8)}`
+        : '';
+    setEditor({
+      kind,
+      source,
+      defaults: {
+        ...original,
+        code,
+        ...(kind === 'actions'
+          ? {
+              status: 'À faire',
+              progress: 0,
+              actual_start: '',
+              actual_end: '',
+              achieved: null,
+              cause: '',
+              corrective: [],
+            }
+          : {}),
+      },
+    });
+  };
   const editButtons = (kind: Kind, value: Entity) => (
     <div className="inline">
+      {['projects', 'modules'].includes(kind) && (
+        <button className="secondary" onClick={() => startCopy(kind, value)}>
+          Dupliquer
+        </button>
+      )}
       <button
         className="icon-button"
         aria-label="Modifier"
@@ -279,6 +331,14 @@ export function PlansApp() {
           </div>
         </header>
         <main id="main" tabIndex={-1}>
+          {notice && (
+            <p className="notice" role="status">
+              {notice}
+              <button className="text-button" onClick={() => setNotice('')}>
+                Fermer
+              </button>
+            </p>
+          )}
           {error && (
             <div className="error" role="alert">
               {error}
@@ -295,6 +355,8 @@ export function PlansApp() {
               onEdit={() => setEditor({ kind: 'actions', value: action })}
               onDelete={() => void remove('actions', action)}
               onRefresh={refresh}
+              onDuplicate={() => startCopy('actions', action)}
+              onSource={openSource}
             />
           ) : page === 'dashboard' ? (
             <Dashboard
@@ -350,6 +412,7 @@ export function PlansApp() {
                   </div>
                   {manages(state, selected) && editButtons('projects', selected)}
                 </header>
+                <CopyProvenance kind="projects" id={selected.id} onSource={openSource} />
                 <section className="panel project-meta">
                   <div>
                     <small>Période prévue</small>
@@ -398,7 +461,7 @@ export function PlansApp() {
                 {state.modules
                   .filter((m) => m.project_id === selected.id)
                   .map((m) => (
-                    <section className="module-panel" key={m.id}>
+                    <section className="module-panel" key={m.id} id={`module-${m.id}`}>
                       <header>
                         <div>
                           <span className="eyebrow">{m.code}</span>
@@ -439,6 +502,7 @@ export function PlansApp() {
                           </div>
                         )}
                       </header>
+                      <CopyProvenance kind="modules" id={m.id} onSource={openSource} />
                       <ActionTable
                         state={state}
                         actions={state.actions.filter((a) => a.module_id === m.id)}
@@ -452,6 +516,11 @@ export function PlansApp() {
                     <p>Créez un premier module, puis ajoutez vos actions.</p>
                   </div>
                 )}
+                <ProjectDocuments
+                  key={selected.id}
+                  projectId={selected.id}
+                  canManage={manages(state, selected)}
+                />
               </>
             ) : (
               <>
@@ -542,7 +611,29 @@ export function PlansApp() {
         </main>
       </div>
       {editor && (
-        <EntityEditor {...editor} state={state} onClose={() => setEditor(null)} onSaved={refresh} />
+        <EntityEditor
+          {...editor}
+          state={state}
+          onClose={() => setEditor(null)}
+          onSaved={async (saved) => {
+            await refresh();
+            if (editor.source && saved) {
+              setNotice('La copie a été créée. La fiche originale reste inchangée.');
+              setActionId('');
+              if (editor.kind === 'projects') {
+                setPage('projects');
+                setProjectId(saved.id);
+              } else if (editor.kind === 'modules' && 'project_id' in saved) {
+                setPage('projects');
+                setProjectId(saved.project_id);
+                setModuleFocus(saved.id);
+              } else if (editor.kind === 'actions') {
+                setPage('actions');
+                setActionId(saved.id);
+              }
+            }
+          }}
+        />
       )}
     </div>
   );

@@ -8,10 +8,11 @@ import locations from '../../server/plans/location-options.json';
 type Props = {
   kind: Kind;
   value?: Entity;
+  source?: Entity;
   defaults?: Record<string, unknown>;
   state: State;
   onClose: () => void;
-  onSaved: () => Promise<void>;
+  onSaved: (saved?: Entity) => Promise<void>;
 };
 const names = {
   clients: 'client',
@@ -20,10 +21,13 @@ const names = {
   actions: 'action',
   users: 'utilisateur',
 };
-export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }: Props) {
+export function EntityEditor({ kind, value, source, defaults, state, onClose, onSaved }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
+  const [requestId] = useState(() => crypto.randomUUID());
+  const [keepDates, setKeepDates] = useState(true);
   const data = { ...defaults, ...value } as Record<string, unknown>;
   const [location, setLocation] = useState(String(data.location || ''));
   const [selectedProject, setSelectedProject] = useState(
@@ -35,6 +39,9 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
     ),
   );
   const [parentId, setParentId] = useState(String(data.parent_module_id || ''));
+  const [selectedModule, setSelectedModule] = useState(
+    String(data.module_id || state.modules[0]?.id || ''),
+  );
   const parentOptions = state.modules.filter((candidate) => {
     if (candidate.project_id !== selectedProject) return false;
     const seen = new Set<string>();
@@ -89,7 +96,7 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
     options: { id: string; name: string }[],
     disabled = false,
   ) => (
-    <label key={name}>
+    <label key={name === 'pilot_id' ? `${name}-${selectedModule}` : name}>
       {label}
       <select
         aria-label={label}
@@ -101,7 +108,9 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
                 setSelectedProject(e.target.value);
                 setParentId('');
               }
-            : undefined
+            : name === 'module_id'
+              ? (e) => setSelectedModule(e.target.value)
+              : undefined
         }
         disabled={disabled}
         required
@@ -127,16 +136,20 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
       />
     </label>
   );
-  const moduleId = String(data.module_id ?? state.modules[0]?.id ?? '');
+  const moduleId = selectedModule;
   const project = state.projects.find(
     (p) => p.id === state.modules.find((m) => m.id === moduleId)?.project_id,
   );
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setBusy(true);
     setError('');
     const f = new FormData(e.currentTarget);
     const payload: Record<string, unknown> = Object.fromEntries(f.entries());
+    delete payload.copy_documents;
+    delete payload.copy_actions;
     if (kind === 'projects') payload.members = f.getAll('members');
     if (kind === 'users') {
       payload.active = f.get('active') === 'on';
@@ -146,36 +159,100 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
       payload.location = location;
       payload.location_other = location === 'AUTRE (à préciser)' ? f.get('location_other') : '';
       for (const k of ['progress', 'target', 'achieved'])
-        payload[k] = payload[k] === '' ? (k === 'progress' ? 0 : null) : Number(payload[k]);
+        payload[k] =
+          payload[k] === '' || payload[k] == null
+            ? k === 'progress'
+              ? 0
+              : null
+            : Number(payload[k]);
       payload.corrective = (value as Action)?.corrective || [];
     }
     try {
-      await api(`/${kind}${value ? '/' + value.id : ''}`, value ? 'PUT' : 'POST', {
-        data: payload,
-        version: value?.version,
-      });
-      await onSaved();
+      const saved = await api<Entity>(
+        source ? `/${kind}/${source.id}/duplicate` : `/${kind}${value ? '/' + value.id : ''}`,
+        value ? 'PUT' : 'POST',
+        {
+          data: payload,
+          version: source?.version ?? value?.version,
+          ...(source
+            ? {
+                request_id: requestId,
+                copy_documents: f.get('copy_documents') === 'on',
+                copy_actions: f.get('copy_actions') === 'on',
+              }
+            : {}),
+        },
+      );
+      await onSaved(saved);
       onClose();
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setBusy(false);
+      submitting.current = false;
     }
   }
   return (
-    <dialog ref={ref} className="editor" onCancel={onClose} aria-labelledby="entity-editor-title">
+    <dialog
+      ref={ref}
+      className="editor"
+      onCancel={(e) => {
+        if (busy) e.preventDefault();
+        else onClose();
+      }}
+      aria-labelledby="entity-editor-title"
+    >
       <form onSubmit={submit}>
         <header>
           <div>
             <span className="eyebrow">PLAN D’ACTIONS</span>
             <h2 id="entity-editor-title">
-              {value ? 'Modifier' : 'Créer'} {kind === 'actions' ? 'une' : 'un'} {names[kind]}
+              {source ? 'Dupliquer' : value ? 'Modifier' : 'Créer'}{' '}
+              {kind === 'actions' ? 'une' : 'un'} {names[kind]}
             </h2>
           </div>
-          <button type="button" className="icon-button" aria-label="Fermer" onClick={onClose}>
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="Fermer"
+            disabled={busy}
+            onClick={onClose}
+          >
             <X size={20} />
           </button>
         </header>
+        {source && (
+          <div className="notice">
+            <strong>Nouvelle fiche indépendante</strong>
+            <p>
+              Modifiez l’affectation et les informations avant d’enregistrer. La fiche originale
+              reste inchangée. L’historique, les commentaires et le suivi ne sont pas copiés.
+            </p>
+            {kind === 'projects' && (
+              <label className="check">
+                <input type="checkbox" name="copy_documents" />
+                Copier également les documents joints
+              </label>
+            )}
+            {kind === 'modules' && (
+              <label className="check">
+                <input type="checkbox" name="copy_actions" />
+                Copier également les actions (suivi remis à zéro ; pilote conservé si membre du
+                projet, sinon chef de projet)
+              </label>
+            )}
+            {kind === 'actions' && (
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={keepDates}
+                  onChange={(e) => setKeepDates(e.target.checked)}
+                />
+                Conserver les dates prévisionnelles (modifiable ci-dessous)
+              </label>
+            )}
+          </div>
+        )}
         {value && (
           <p className="muted">
             Version {value.version}. Une modification simultanée sera signalée avant
@@ -267,7 +344,7 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
                       state.user.id ||
                     m.id === moduleId,
                 ),
-                Boolean(value) || Boolean(defaults?.module_id),
+                Boolean(value) || (!source && Boolean(defaults?.module_id)),
               )}
               {textarea('description', 'Description de l’action', pilot)}
               {textarea('objective', 'Objectif attendu', pilot)}
@@ -294,36 +371,75 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
               {select(
                 'pilot_id',
                 'Pilote responsable',
-                state.users.filter((u) => u.active && (!project || project.members.includes(u.id))),
+                state.users.filter(
+                  (u) =>
+                    u.active &&
+                    (!project || project.members.includes(u.id) || project.manager_id === u.id),
+                ),
                 pilot,
               )}
-              {select(
-                'status',
-                'Statut',
-                statuses.map((s) => ({ id: s, name: s })),
+              {!source &&
+                select(
+                  'status',
+                  'Statut',
+                  statuses.map((s) => ({ id: s, name: s })),
+                )}
+              {!source && input('progress', 'Avancement (%)', 'number', true)}
+              {source && (
+                <>
+                  <input type="hidden" name="status" value="À faire" />
+                  <input type="hidden" name="progress" value="0" />
+                  <p className="form-hint wide">
+                    La copie commence à « À faire », avec 0 % d’avancement.
+                  </p>
+                </>
               )}
-              {input('progress', 'Avancement (%)', 'number', true)}
-              {input('planned_start', 'Début prévu', 'date', true, pilot)}
-              {input('planned_end', 'Fin prévue', 'date', true, pilot)}
-              {input('deadline_2', '2e échéance (facultatif)', 'date', false, pilot)}
-              {input('deadline_3', '3e échéance (facultatif)', 'date', false, pilot)}
+              <div className="form-grid wide" key={`dates-${keepDates}`}>
+                {source && !keepDates ? (
+                  <>
+                    <label>
+                      Début prévu
+                      <input name="planned_start" type="date" required />
+                    </label>
+                    <label>
+                      Fin prévue
+                      <input name="planned_end" type="date" required />
+                    </label>
+                    <label>
+                      2e échéance (facultatif)
+                      <input name="deadline_2" type="date" />
+                    </label>
+                    <label>
+                      3e échéance (facultatif)
+                      <input name="deadline_3" type="date" />
+                    </label>
+                  </>
+                ) : (
+                  <>
+                    {input('planned_start', 'Début prévu', 'date', true, pilot)}
+                    {input('planned_end', 'Fin prévue', 'date', true, pilot)}
+                    {input('deadline_2', '2e échéance (facultatif)', 'date', false, pilot)}
+                    {input('deadline_3', '3e échéance (facultatif)', 'date', false, pilot)}
+                  </>
+                )}
+              </div>
               <p className="form-hint wide">
                 Les échéances doivent se suivre dans l’ordre. Le retard reste calculé sur la fin
                 prévue initiale.
               </p>
-              {input('actual_start', 'Début réel', 'date')}
-              {input('actual_end', 'Fin réelle', 'date')}
+              {!source && input('actual_start', 'Début réel', 'date')}
+              {!source && input('actual_end', 'Fin réelle', 'date')}
               <p className="form-hint wide">
                 Une action terminée exige 100 % et des dates réelles. L’avancement décrit le travail
                 effectué, indépendamment du résultat obtenu.
               </p>
               {input('target', 'Valeur cible (facultatif)', 'number', false, pilot)}
-              {input('achieved', 'Valeur réalisée', 'number')}
+              {!source && input('achieved', 'Valeur réalisée', 'number')}
               {input('unit', 'Unité de mesure', 'text', false, pilot)}
               <p className="form-hint">
                 Écart = réalisé − cible. Objectif qualitatif : laissez les trois mesures vides.
               </p>
-              {textarea('cause', 'Cause du retard ou de non-réalisation')}
+              {!source && textarea('cause', 'Cause du retard ou de non-réalisation')}
             </>
           )}
           {kind === 'users' && (
@@ -359,7 +475,7 @@ export function EntityEditor({ kind, value, defaults, state, onClose, onSaved }:
             Annuler
           </button>
           <button className="primary" disabled={busy}>
-            {busy ? 'Enregistrement…' : 'Enregistrer'}
+            {busy ? 'Enregistrement…' : source ? 'Enregistrer la copie' : 'Enregistrer'}
           </button>
         </footer>
       </form>

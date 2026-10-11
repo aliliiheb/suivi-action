@@ -29,6 +29,6 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
       `${data.message || 'Échec de la requête.'}${Array.isArray(data.details) ? ' ' + data.details.join(' · ') : ''}`,
       response.status,
     );
-  if (data.csrf) csrf = data.csrf;
+  if (data?.csrf) csrf = data.csrf;
   return data;
 }
