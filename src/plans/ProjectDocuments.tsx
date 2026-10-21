@@ -19,9 +19,11 @@ const contentUrl = (id: string, preview = false) =>
 export function ProjectDocuments({
   projectId,
   canManage,
+  ownerKind = 'projects',
 }: {
   projectId: string;
   canManage: boolean;
+  ownerKind?: 'projects' | 'missions';
 }) {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [error, setError] = useState('');
@@ -36,8 +38,8 @@ export function ProjectDocuments({
   const fileInput = useRef<HTMLInputElement>(null);
   const requestIds = useRef(new WeakMap<File, string>());
   const load = useCallback(
-    async () => setDocuments(await api<Document[]>(`/projects/${projectId}/documents`)),
-    [projectId],
+    async () => setDocuments(await api<Document[]>(`/${ownerKind}/${projectId}/documents`)),
+    [projectId, ownerKind],
   );
   useEffect(() => {
     void load()
@@ -71,7 +73,7 @@ export function ProjectDocuments({
             requestId = crypto.randomUUID();
             requestIds.current.set(file, requestId);
           }
-          await api(`/projects/${projectId}/documents`, 'POST', {
+          await api(`/${ownerKind}/${projectId}/documents`, 'POST', {
             filename: file.name,
             base64,
             request_id: requestId,
@@ -118,7 +120,9 @@ export function ProjectDocuments({
     <section className="panel documents-panel" aria-labelledby="documents-title">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">RESSOURCES DU PROJET</span>
+          <span className="eyebrow">
+            {ownerKind === 'missions' ? 'RESSOURCES DE LA MISSION' : 'RESSOURCES DU PROJET'}
+          </span>
           <h2 id="documents-title">Documents joints</h2>
         </div>
         <FileText size={22} />
@@ -139,7 +143,7 @@ export function ProjectDocuments({
         >
           <Upload size={24} />
           <strong>Déposez vos fichiers ici</strong>
-          <span>Word, Excel, PDF, PowerPoint et images · 5 Mo par fichier · 50 Mo par projet</span>
+          <span>Word, Excel, PDF, PowerPoint et images · 5 Mo par fichier · 50 Mo par fiche</span>
           <label className="secondary">
             Choisir des fichiers
             <input
@@ -161,7 +165,9 @@ export function ProjectDocuments({
           {error}
         </p>
       )}
-      {!loading && !documents.length && <p className="empty">Aucun document joint à ce projet.</p>}
+      {!loading && !documents.length && (
+        <p className="empty">Aucun document joint à cette fiche.</p>
+      )}
       <ul className="document-list">
         {documents.map((doc) => (
           <li key={doc.id}>

@@ -10,6 +10,7 @@ export type User = {
 };
 export type Client = { id: string; version: number; code: string; name: string; contact: string };
 export type Project = {
+  mission_id?: string;
   id: string;
   version: number;
   code: string;
@@ -22,6 +23,7 @@ export type Project = {
   planned_end: string;
 };
 export type Module = {
+  mission_id?: string;
   parent_module_id?: string;
   id: string;
   version: number;
@@ -38,6 +40,7 @@ export type Corrective = {
   status: Status;
 };
 export type Action = {
+  mission_id?: string;
   location?: string;
   location_other?: string;
   mission_number?: string;
@@ -64,6 +67,7 @@ export type Action = {
   corrective: Corrective[];
 };
 export type State = {
+  missions?: Mission[];
   user: User;
   users: User[];
   clients: Client[];
@@ -93,7 +97,41 @@ export const isLate = (a: Action) =>
   a.status !== 'Terminée' && a.planned_end < new Date().toISOString().slice(0, 10);
 export const projectOf = (s: State, a: Action) =>
   s.projects.find((p) => p.id === s.modules.find((m) => m.id === a.module_id)?.project_id);
-export const manages = (s: State, p?: Project) =>
+export const manages = (s: State, p?: Pick<Project, 'manager_id'>) =>
   s.user.role === 'ADMIN' || (s.user.role === 'CHEF' && p?.manager_id === s.user.id);
 export const average = (actions: Action[]) =>
   actions.length ? Math.round(actions.reduce((n, a) => n + a.progress, 0) / actions.length) : null;
+export const missionUrl = (id: string) => `/plans?mission=${encodeURIComponent(id)}`;
+export const missionStatuses = [
+  'Planifiée',
+  'En cours',
+  'Suspendue',
+  'Terminée',
+  'Annulée',
+] as const;
+export const missionPriorities = ['Basse', 'Normale', 'Haute', 'Urgente'] as const;
+export type Mission = {
+  id: string;
+  version: number;
+  number: string;
+  title: string;
+  description: string;
+  client_id: string;
+  project_id: string;
+  manager_id: string;
+  members: string[];
+  location: string;
+  location_other: string;
+  planned_start: string;
+  planned_end: string;
+  actual_start: string;
+  actual_end: string;
+  status: (typeof missionStatuses)[number];
+  priority: (typeof missionPriorities)[number];
+  observations: string;
+  archived: boolean;
+};
+export const missionNumber = (
+  state: State,
+  entity: { mission_id?: string; mission_number?: string },
+) => state.missions?.find((m) => m.id === entity.mission_id)?.number || entity.mission_number || '';

@@ -2,7 +2,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { EntityEditor } from '../../src/plans/EntityEditor';
 import { ActionTable } from '../../src/plans/ActionTable';
-import type { Action, State } from '../../src/plans/types';
+import type { Action, State, Mission } from '../../src/plans/types';
 import { api } from '../../src/plans/api';
 vi.mock('../../src/plans/api', () => ({ api: vi.fn().mockResolvedValue({}) }));
 beforeAll(() => {
@@ -248,5 +248,107 @@ describe('Nouveaux champs FMS', () => {
       within(screen.getByLabelText('Référence Module Principal')).getAllByRole('option'),
     ).toHaveLength(1);
     expect(screen.getByLabelText(/Copier également les actions/)).not.toBeChecked();
+  });
+  it('sélectionne une mission recherchée et conserve le numéro historique', async () => {
+    const mission: Mission = {
+      id: 'mission-1',
+      version: 1,
+      number: 'MIS-LIVE',
+      title: 'Audit',
+      description: '',
+      client_id: 'c',
+      project_id: 'p',
+      manager_id: 'u',
+      members: ['u'],
+      location: 'FSP ALGERIE',
+      location_other: '',
+      planned_start: '2026-01-01',
+      planned_end: '2026-12-01',
+      actual_start: '',
+      actual_end: '',
+      status: 'Planifiée',
+      priority: 'Normale',
+      observations: '',
+      archived: false,
+    };
+    render(
+      <EntityEditor
+        kind="actions"
+        value={action}
+        state={{ ...state, missions: [mission] }}
+        onClose={() => {}}
+        onSaved={async () => {}}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText('Rechercher une mission'), {
+      target: { value: 'Audit' },
+    });
+    expect(screen.getByRole('option', { name: /MIS-LIVE — Audit/ })).toBeVisible();
+    fireEvent.change(screen.getByLabelText('N° Mission'), { target: { value: mission.id } });
+    expect(screen.getByRole('link', { name: /Consulter la fiche/ })).toHaveAttribute(
+      'href',
+      '/plans?mission=mission-1',
+    );
+    await act(async () => {
+      fireEvent.submit(screen.getByRole('button', { name: 'Enregistrer' }).closest('form')!);
+    });
+    expect(api).toHaveBeenCalledWith(
+      '/actions/a',
+      'PUT',
+      expect.objectContaining({
+        data: expect.objectContaining({ mission_id: mission.id, mission_number: 'MIS-001' }),
+      }),
+    );
+  });
+  it('crée une mission depuis une action sans enregistrer ni perdre le formulaire parent', async () => {
+    const next = {
+      ...state,
+      clients: [{ id: 'c', version: 1, code: 'C', name: 'FMS', contact: '' }],
+    };
+    render(
+      <EntityEditor
+        kind="actions"
+        value={action}
+        state={next}
+        onClose={() => {}}
+        onSaved={async () => {}}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText('Description de l’action'), {
+      target: { value: 'Brouillon conservé' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Créer une mission' }));
+    const nested = screen.getByRole('dialog', { name: 'Créer une mission' });
+    expect(screen.getAllByRole('dialog')).toHaveLength(2);
+    fireEvent.change(within(nested).getByLabelText('Intitulé de la mission'), {
+      target: { value: 'Mission créée' },
+    });
+    fireEvent.change(within(nested).getByLabelText('Date de début prévue'), {
+      target: { value: '2026-01-01' },
+    });
+    fireEvent.change(within(nested).getByLabelText('Date de fin prévue'), {
+      target: { value: '2026-12-31' },
+    });
+    vi.mocked(api).mockResolvedValueOnce({
+      id: 'new-mission',
+      number: 'MIS-NEW',
+      title: 'Mission créée',
+      client_id: 'c',
+      status: 'Planifiée',
+      members: ['u'],
+      manager_id: 'u',
+      version: 1,
+    });
+    await act(async () => {
+      fireEvent.submit(
+        within(nested).getByRole('button', { name: 'Enregistrer la mission' }).closest('form')!,
+      );
+    });
+    expect(api).toHaveBeenCalledTimes(1);
+    expect(api).toHaveBeenCalledWith('/missions', 'POST', expect.anything());
+    expect(screen.getByLabelText('Description de l’action')).toHaveValue('Brouillon conservé');
+    expect(screen.getByLabelText('N° Mission')).toHaveValue('new-mission');
+    fireEvent.click(screen.getByRole('button', { name: 'Retirer l’association' }));
+    expect(screen.getByLabelText('N° Mission')).toHaveValue('');
   });
 });

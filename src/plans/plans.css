@@ -10,6 +10,158 @@
   --surface: #fff;
   --accent: #e4eee8;
 }
+.mission-selector {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f5f8f6;
+}
+.mission-selector .inline {
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.mission-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.mission-link a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.action-mission {
+  margin-top: 6px;
+  font-size: 12px;
+  max-width: 310px;
+}
+.mission-filters {
+  margin-bottom: 20px;
+}
+.mission-filters .check {
+  margin-top: 14px;
+}
+.mission-filters .filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+.mission-stats {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
+.mission-navigation {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+}
+.mission-navigation label {
+  flex: 1 1 250px;
+}
+.mission-controls {
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.mission-description {
+  margin-top: 20px;
+}
+.mission-table {
+  min-width: 850px;
+}
+.mission-table td:nth-child(2) {
+  min-width: 220px;
+}
+.mission-facts {
+  margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+.mission-facts dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+.mission-facts dd {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}
+.preserve-lines {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.mission-distribution,
+.mission-related {
+  list-style: none;
+  padding: 0;
+}
+.mission-distribution li,
+.mission-related li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.mission-associate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 14px;
+  margin: 20px 0;
+}
+.mission-associate label {
+  flex: 1 1 220px;
+}
+.mission-history {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.mission-history summary {
+  cursor: pointer;
+  line-height: 1.6;
+}
+.mission-changes {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  background: #f5f8f6;
+  border-radius: 8px;
+}
+.mission-changes dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.mission-changes dt {
+  font-weight: 600;
+}
+.mission-comment {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.mission-caption {
+  text-align: left;
+  padding: 12px;
+  font-weight: 600;
+}
+@media (max-width: 640px) {
+  .mission-selector {
+    padding: 12px;
+  }
+  .mission-navigation > button,
+  .mission-controls > button {
+    min-height: 44px;
+  }
+  .mission-facts {
+    grid-template-columns: 1fr;
+  }
+  .mission-associate button {
+    width: 100%;
+  }
+}
 * {
   box-sizing: border-box;
 }

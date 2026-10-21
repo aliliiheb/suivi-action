@@ -5,6 +5,7 @@ import { api } from './api';
 import type { State, Kind, Entity, Action } from './types';
 import { statuses, roles } from './types';
 import locations from '../../server/plans/location-options.json';
+import { MissionSelector } from './MissionSelector';
 type Props = {
   kind: Kind;
   value?: Entity;
@@ -30,6 +31,10 @@ export function EntityEditor({ kind, value, source, defaults, state, onClose, on
   const [keepDates, setKeepDates] = useState(true);
   const data = { ...defaults, ...value } as Record<string, unknown>;
   const [location, setLocation] = useState(String(data.location || ''));
+  const [missionId, setMissionId] = useState(String(data.mission_id || ''));
+  const [selectedClient, setSelectedClient] = useState(
+    String(data.client_id || state.clients[0]?.id || ''),
+  );
   const [selectedProject, setSelectedProject] = useState(
     String(
       data.project_id ||
@@ -107,10 +112,19 @@ export function EntityEditor({ kind, value, source, defaults, state, onClose, on
             ? (e) => {
                 setSelectedProject(e.target.value);
                 setParentId('');
+                setMissionId('');
               }
             : name === 'module_id'
-              ? (e) => setSelectedModule(e.target.value)
-              : undefined
+              ? (e) => {
+                  setSelectedModule(e.target.value);
+                  setMissionId('');
+                }
+              : name === 'client_id'
+                ? (e) => {
+                    setSelectedClient(e.target.value);
+                    setMissionId('');
+                  }
+                : undefined
         }
         disabled={disabled}
         required
@@ -150,12 +164,14 @@ export function EntityEditor({ kind, value, source, defaults, state, onClose, on
     const payload: Record<string, unknown> = Object.fromEntries(f.entries());
     delete payload.copy_documents;
     delete payload.copy_actions;
+    if (['projects', 'modules', 'actions'].includes(kind)) payload.mission_id = missionId;
     if (kind === 'projects') payload.members = f.getAll('members');
     if (kind === 'users') {
       payload.active = f.get('active') === 'on';
       if (!payload.password) delete payload.password;
     }
     if (kind === 'actions') {
+      payload.mission_number = String(data.mission_number || '');
       payload.location = location;
       payload.location_other = location === 'AUTRE (à préciser)' ? f.get('location_other') : '';
       for (const k of ['progress', 'target', 'achieved'])
@@ -278,6 +294,12 @@ export function EntityEditor({ kind, value, source, defaults, state, onClose, on
                 ),
               )}
               {textarea('description', 'Description')}
+              <MissionSelector
+                state={state}
+                value={missionId}
+                onChange={setMissionId}
+                clientId={selectedClient}
+              />
               {input('planned_start', 'Début prévu', 'date', true)}
               {input('planned_end', 'Fin prévue', 'date', true)}
               <fieldset className="wide">
@@ -311,6 +333,13 @@ export function EntityEditor({ kind, value, source, defaults, state, onClose, on
                 Boolean(value),
               )}
               {textarea('description', 'Description')}
+              <MissionSelector
+                state={state}
+                value={missionId}
+                onChange={setMissionId}
+                projectId={selectedProject}
+                clientId={state.projects.find((p) => p.id === selectedProject)?.client_id}
+              />
               <label className="wide">
                 Référence Module Principal
                 <select
@@ -366,7 +395,15 @@ export function EntityEditor({ kind, value, source, defaults, state, onClose, on
               </label>
               {location === 'AUTRE (à préciser)' &&
                 input('location_other', 'Précisez l’emplacement', 'text', true, pilot)}
-              {input('mission_number', 'N° Mission', 'text', false, pilot)}
+              <MissionSelector
+                state={state}
+                value={missionId}
+                onChange={setMissionId}
+                clientId={project?.client_id}
+                projectId={project?.id}
+                legacy={String(data.mission_number || '')}
+                disabled={pilot}
+              />
               {input('priority_reference', 'Réf. Action Prioritaire', 'text', false, pilot)}
               {select(
                 'pilot_id',

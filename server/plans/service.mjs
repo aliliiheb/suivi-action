@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { schemas, parse, fail, canManage } from './rules.mjs';
-export const tables = ['clients', 'projects', 'modules', 'actions', 'users'];
+export const tables = ['clients', 'projects', 'modules', 'actions', 'users', 'missions'];
 export const unpack = (row) => row && { ...row.data, id: row.id, version: row.version };
 export async function userById(tx, id) {
   return (
@@ -32,20 +32,26 @@ export async function snapshot(tx, user) {
       modules.map((m) => m.id),
     ])
   ).rows.map(unpack);
+  const missions = (
+    await tx.query(
+      `SELECT * FROM plan_missions WHERE $1='ADMIN' OR manager_id=$2 OR data->'members' ? $2 OR project_id=ANY($3::text[])`,
+      [user.role, user.id, ids],
+    )
+  ).rows.map(unpack);
   const clients = (
     await tx.query(`SELECT * FROM plan_clients WHERE $1='ADMIN' OR id=ANY($2::text[])`, [
       user.role,
-      projects.map((p) => p.client_id),
+      [...projects.map((p) => p.client_id), ...missions.map((m) => m.client_id)],
     ])
   ).rows.map(unpack);
   // Managers need the directory to grant membership; pilots only see colleagues in their projects.
   const users = (
     await tx.query(
-      `SELECT id,name,email,role,active,version FROM plan_users WHERE $1 IN ('ADMIN','CHEF') OR id=$2 OR id IN (SELECT user_id FROM plan_members WHERE project_id=ANY($3::text[])) OR id IN (SELECT manager_id FROM plan_projects WHERE id=ANY($3::text[]))`,
-      [user.role, user.id, ids],
+      `SELECT id,name,email,role,active,version FROM plan_users WHERE $1 IN ('ADMIN','CHEF') OR id=$2 OR id IN (SELECT user_id FROM plan_members WHERE project_id=ANY($3::text[])) OR id IN (SELECT manager_id FROM plan_projects WHERE id=ANY($3::text[])) OR id=ANY($4::text[])`,
+      [user.role, user.id, ids, missions.flatMap((m) => [m.manager_id, ...m.members])],
     )
   ).rows;
-  return { user, clients, projects, modules, actions, users };
+  return { user, clients, projects, modules, actions, users, missions };
 }
 export async function audit(tx, actor, entityId, projectId, operation, before, after) {
   await tx.query(
@@ -63,7 +69,8 @@ export async function audit(tx, actor, entityId, projectId, operation, before, a
 }
 export function projectFor(state, kind, value) {
   if (kind === 'projects') return value;
-  if (kind === 'modules') return state.projects.find((p) => p.id === value.project_id);
+  if (kind === 'modules' || kind === 'missions')
+    return state.projects.find((p) => p.id === value.project_id);
   if (kind === 'actions') {
     const mod = state.modules.find((m) => m.id === value.module_id);
     return state.projects.find((p) => p.id === mod?.project_id);
@@ -71,6 +78,10 @@ export function projectFor(state, kind, value) {
 }
 export function authorize(state, kind, value, operation) {
   const user = state.user;
+  if (kind === 'missions') {
+    if (canManage(user, value)) return;
+    fail(403, 'Seul un administrateur ou le responsable chef de projet peut gérer cette mission.');
+  }
   if (kind === 'users' || kind === 'clients') {
     if (user.role !== 'ADMIN') fail(403, 'Cette opération est réservée à un administrateur.');
     return;
@@ -118,11 +129,14 @@ export async function mutate(tx, user, kind, id, input, version, operation = 'up
           'location',
           'location_other',
           'mission_number',
+          'mission_id',
           'priority_reference',
         ]
       : kind === 'modules'
-        ? ['parent_module_id']
-        : [];
+        ? ['parent_module_id', 'mission_id']
+        : kind === 'projects'
+          ? ['mission_id']
+          : [];
   const preserved = Object.fromEntries(
     addedKeys.filter((key) => before && before[key] !== undefined).map((key) => [key, before[key]]),
   );
@@ -132,7 +146,64 @@ export async function mutate(tx, user, kind, id, input, version, operation = 'up
   if (kind === 'projects' && user.role === 'CHEF' && data.manager_id !== user.id)
     fail(403, 'Seul un administrateur peut transférer la responsabilité du projet.');
   if (operation !== 'delete') {
+    if (kind === 'missions') {
+      if (!state.clients.some((c) => c.id === data.client_id)) fail(422, 'Société inaccessible.');
+      if (user.role === 'CHEF' && data.manager_id !== user.id)
+        fail(403, 'Seul un administrateur peut transférer la responsabilité.');
+      if (!state.users.some((u) => u.id === data.manager_id && u.active && u.role !== 'PILOTE'))
+        fail(422, 'Responsable invalide.');
+      data.members = [...new Set([...data.members, data.manager_id])];
+      if (data.members.some((id) => !state.users.some((u) => u.id === id && u.active)))
+        fail(422, 'Membre inconnu ou désactivé.');
+      if (data.project_id) {
+        const project = state.projects.find((p) => p.id === data.project_id);
+        if (!project || project.client_id !== data.client_id)
+          fail(422, 'Le projet doit être accessible et appartenir à la même société.');
+        if (!before || data.project_id !== before.project_id)
+          authorize(state, 'projects', project, 'update');
+      }
+      if (before && data.client_id !== before.client_id) {
+        const linked = (
+          await tx.query(
+            `SELECT client_id FROM plan_projects WHERE mission_id=$1 UNION SELECT p.client_id FROM plan_modules m JOIN plan_projects p ON p.id=m.project_id WHERE m.mission_id=$1 UNION SELECT p.client_id FROM plan_actions a JOIN plan_modules m ON m.id=a.module_id JOIN plan_projects p ON p.id=m.project_id WHERE a.mission_id=$1`,
+            [id],
+          )
+        ).rows;
+        if (linked.some((p) => p.client_id !== data.client_id))
+          fail(
+            422,
+            'Dissociez les éléments des autres sociétés avant de changer la société de la mission.',
+          );
+      }
+    }
+    if (['projects', 'modules', 'actions'].includes(kind) && data.mission_id) {
+      const mission = state.missions.find((m) => m.id === data.mission_id);
+      const clientId =
+        kind === 'projects' ? data.client_id : projectFor(state, kind, data)?.client_id;
+      // An unchanged association stays editable for collaborators without mission access.
+      const same = before?.mission_id === data.mission_id;
+      const target =
+        mission ||
+        (same
+          ? unpack(
+              (await tx.query('SELECT * FROM plan_missions WHERE id=$1', [data.mission_id]))
+                .rows[0],
+            )
+          : null);
+      if (!target || target.client_id !== clientId || (!same && target.archived))
+        fail(422, 'Sélectionnez une mission accessible, non archivée, de la même société.');
+    }
     if (kind === 'projects') {
+      if (before && data.client_id !== before.client_id) {
+        const linked = (
+          await tx.query(
+            `SELECT x.client_id FROM plan_missions x WHERE x.project_id=$1 OR x.id IN (SELECT mission_id FROM plan_modules WHERE project_id=$1 UNION SELECT a.mission_id FROM plan_actions a JOIN plan_modules m ON m.id=a.module_id WHERE m.project_id=$1)`,
+            [id],
+          )
+        ).rows;
+        if (linked.some((m) => m.client_id !== data.client_id))
+          fail(422, 'Dissociez les missions liées avant de changer la société de ce projet.');
+      }
       if (!state.clients.some((c) => c.id === data.client_id)) fail(422, 'Client inaccessible.');
       if (
         !state.users.some(
@@ -182,7 +253,11 @@ export async function mutate(tx, user, kind, id, input, version, operation = 'up
           'corrective',
         ];
         for (const key of Object.keys(data))
-          if (!editable.includes(key) && JSON.stringify(data[key]) !== JSON.stringify(before[key]))
+          if (
+            !editable.includes(key) &&
+            JSON.stringify(data[key]) !==
+              JSON.stringify(key === 'mission_id' ? before[key] || '' : before[key])
+          )
             fail(403, 'Le pilote peut modifier uniquement le suivi de ses actions.');
       }
       validateMembers(state, data);
@@ -202,6 +277,11 @@ export async function mutate(tx, user, kind, id, input, version, operation = 'up
       if (admins.length <= 1) fail(422, 'Conservez au moins un administrateur actif.');
     }
     if (before && (!data.active || data.role === 'PILOTE')) {
+      if (state.missions.some((m) => m.manager_id === id))
+        fail(
+          422,
+          'Transférez les missions de ce responsable avant de changer son rôle ou de le désactiver.',
+        );
       if (state.projects.some((p) => p.manager_id === id))
         fail(
           422,
@@ -242,9 +322,21 @@ export async function mutate(tx, user, kind, id, input, version, operation = 'up
     return after;
   }
   if (operation === 'delete') {
+    if (kind === 'missions')
+      fail(422, 'Archivez la mission pour conserver ses liens et son historique.');
     if (kind === 'modules' && state.modules.some((m) => m.parent_module_id === id))
       fail(422, 'Détachez les sous-modules avant de supprimer leur module principal.');
     await tx.query(`DELETE FROM plan_${kind} WHERE id=$1`, [id]);
+    if (before.mission_id)
+      await audit(
+        tx,
+        user,
+        before.mission_id,
+        null,
+        'Dissociation',
+        { kind, entity_id: id, mission_id: before.mission_id },
+        null,
+      );
     await audit(
       tx,
       user,
@@ -257,7 +349,7 @@ export async function mutate(tx, user, kind, id, input, version, operation = 'up
     return { id };
   }
   const foreign =
-    kind === 'projects'
+    kind === 'projects' || kind === 'missions'
       ? ['client_id', 'manager_id']
       : kind === 'modules'
         ? ['project_id']
@@ -288,9 +380,30 @@ export async function mutate(tx, user, kind, id, input, version, operation = 'up
     user,
     entityId,
     kind === 'projects' ? entityId : projectFor(state, kind, data)?.id || null,
-    before ? 'Modification' : 'Création',
+    kind === 'missions' && before && before.archived !== data.archived
+      ? data.archived
+        ? 'Archivage'
+        : 'Réactivation'
+      : before
+        ? 'Modification'
+        : 'Création',
     before,
     after,
   );
+  if (
+    ['projects', 'modules', 'actions'].includes(kind) &&
+    (before?.mission_id || '') !== (data.mission_id || '')
+  ) {
+    for (const missionId of new Set([before?.mission_id, data.mission_id].filter(Boolean)))
+      await audit(
+        tx,
+        user,
+        missionId,
+        null,
+        data.mission_id === missionId ? 'Association' : 'Dissociation',
+        { kind, entity_id: entityId, mission_id: before?.mission_id || '' },
+        { kind, entity_id: entityId, mission_id: data.mission_id || '' },
+      );
+  }
   return after;
 }

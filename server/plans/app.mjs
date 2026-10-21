@@ -13,6 +13,7 @@ import { snapshot, userById, exclusive, mutate, audit, authorize } from './servi
 import { exportFile, readFileRows, columns } from './files.mjs';
 import { previewImport, commitImport } from './imports.mjs';
 import { duplicate } from './duplication.mjs';
+import { missionAccess } from './documents.mjs';
 import {
   addDocument,
   changeDocument,
@@ -177,6 +178,82 @@ export function createApp(
     });
   });
   api.get('/state', async (req, res) => res.json(await snapshot(db, req.user)));
+  api.post('/missions/:id/links', async (req, res) =>
+    res.json(
+      await exclusive(db, req.user.id, async (tx, u) => {
+        const body = parse(
+          z
+            .object({
+              kind: z.enum(['projects', 'modules', 'actions']),
+              entity_id: z.string().min(1),
+              version: z.number().int(),
+              detach: z.boolean().default(false),
+            })
+            .strict(),
+          req.body,
+        );
+        const state = await snapshot(tx, u);
+        const mission = state.missions.find((m) => m.id === req.params.id);
+        if (!mission) fail(404, 'Mission inaccessible.');
+        authorize(state, 'missions', mission, 'update');
+        const entity = state[body.kind].find((e) => e.id === body.entity_id);
+        if (!entity) fail(404, 'Élément inaccessible.');
+        if (body.detach && entity.mission_id !== mission.id)
+          fail(409, 'L’association a changé. Actualisez la fiche.');
+        const { id, version: _version, ...data } = entity;
+        return mutate(
+          tx,
+          u,
+          body.kind,
+          id,
+          { ...data, mission_id: body.detach ? '' : mission.id },
+          body.version,
+        );
+      }),
+    ),
+  );
+  api.get('/missions/:id/documents', async (req, res) => {
+    await missionAccess(db, req.user, req.params.id);
+    res.json(
+      (
+        await db.query(
+          `SELECT ${documentColumns} FROM plan_documents d JOIN plan_users u ON u.id=d.uploaded_by WHERE mission_id=$1 ORDER BY at DESC,id`,
+          [req.params.id],
+        )
+      ).rows,
+    );
+  });
+  api.post('/missions/:id/documents', async (req, res) =>
+    res
+      .status(201)
+      .json(
+        await exclusive(db, req.user.id, (tx, u) =>
+          addDocument(tx, u, req.params.id, req.body, 'missions'),
+        ),
+      ),
+  );
+  api.get('/missions/:id/history', async (req, res) => {
+    await missionAccess(db, req.user, req.params.id);
+    res.json(
+      (
+        await db.query(
+          'SELECT a.*,u.name AS author FROM plan_audit a JOIN plan_users u ON u.id=a.actor_id WHERE entity_id=$1 ORDER BY at DESC,id',
+          [req.params.id],
+        )
+      ).rows,
+    );
+  });
+  api.post('/missions/:id/comments', async (req, res) =>
+    res.json(
+      await exclusive(db, req.user.id, async (tx, u) => {
+        const m = await missionAccess(tx, u, req.params.id);
+        if (m.archived) fail(422, 'Mission archivée.');
+        const content = parse(z.string().trim().min(1).max(4000), req.body.content);
+        await audit(tx, u, m.id, null, 'Commentaire', null, { content });
+        return { ok: true };
+      }),
+    ),
+  );
   api.get('/projects/:id/documents', async (req, res) => {
     await projectAccess(db, req.user, req.params.id);
     res.json(
@@ -237,7 +314,7 @@ export function createApp(
       ),
   );
   api.get('/:kind/:id/provenance', async (req, res) => {
-    if (!['projects', 'modules', 'actions'].includes(req.params.kind))
+    if (!['projects', 'modules', 'actions', 'missions'].includes(req.params.kind))
       fail(404, 'Ressource inconnue.');
     const state = await snapshot(db, req.user);
     if (!state[req.params.kind].some((r) => r.id === req.params.id))
@@ -330,6 +407,16 @@ export function createApp(
       actions,
       modules,
       state.users.filter((u) => project.members.includes(u.id)),
+      {
+        origin,
+        missions: state.missions.filter(
+          (m) =>
+            m.project_id === project.id ||
+            project.mission_id === m.id ||
+            modules.some((mod) => mod.mission_id === m.id) ||
+            actions.some((a) => a.mission_id === m.id),
+        ),
+      },
     );
     res.type(
       req.params.format === 'xlsx'

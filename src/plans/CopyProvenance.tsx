@@ -8,14 +8,14 @@ type Provenance = {
   author: string;
   source_available: boolean;
 };
-export function CopyProvenance({
+export function CopyProvenance<K extends Kind | 'missions'>({
   kind,
   id,
   onSource,
 }: {
-  kind: Kind;
+  kind: K;
   id: string;
-  onSource: (kind: Kind, id: string) => void;
+  onSource: (kind: K, id: string) => void;
 }) {
   const [info, setInfo] = useState<Provenance | null>(null);
   const [error, setError] = useState('');

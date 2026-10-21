@@ -6,6 +6,7 @@ import type { Action, Audit, State, Corrective } from './types';
 import { dateFR, statuses, projectOf, manages, isLate } from './types';
 import { Badge } from './ActionTable';
 import { CopyProvenance } from './CopyProvenance';
+import { MissionLink } from './MissionSelector';
 import type { Kind } from './types';
 export function ActionDetail({
   state,
@@ -130,7 +131,9 @@ export function ActionDetail({
             </div>
             <div>
               <dt>N° Mission</dt>
-              <dd>{action.mission_number || 'Non renseigné'}</dd>
+              <dd>
+                <MissionLink state={state} entity={action} />
+              </dd>
             </div>
             <div>
               <dt>Réf. Action Prioritaire</dt>

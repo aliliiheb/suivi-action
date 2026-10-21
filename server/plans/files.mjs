@@ -9,6 +9,7 @@ import {
   TextRun,
   WidthType,
   HeadingLevel,
+  ExternalHyperlink,
 } from 'docx';
 import AdmZip from 'adm-zip';
 import { XMLParser } from 'fast-xml-parser';
@@ -38,6 +39,7 @@ export const columns = {
   location_other: 'Autre emplacement',
   mission_number: 'N° Mission',
   priority_reference: 'Réf. Action Prioritaire',
+  mission_id: 'Identifiant mission',
 };
 const values = (a) =>
   Object.keys(columns).map((k) => (k === 'corrective' ? JSON.stringify(a[k] || []) : (a[k] ?? '')));
@@ -50,7 +52,13 @@ const dateFields = [
   'deadline_3',
 ];
 const frenchDate = (value) => (value ? String(value).split('-').reverse().join('/') : '');
-export async function exportFile(format, project, actions, modules, users) {
+export async function exportFile(format, project, actions, modules, users, options = {}) {
+  const missions = options.missions || [];
+  const url = (id) => `${options.origin || ''}/plans?mission=${encodeURIComponent(id)}`;
+  actions = actions.map((a) => ({
+    ...a,
+    mission_number: missions.find((m) => m.id === a.mission_id)?.number || a.mission_number || '',
+  }));
   if (format === 'xlsx') {
     const wb = new ExcelJS.Workbook();
     wb.creator = 'PROGRESS';
@@ -93,6 +101,11 @@ export async function exportFile(format, project, actions, modules, users) {
     ];
     actions.forEach((a) => {
       const row = sheet.addRow([...values(a), a.comments || '']);
+      if (missions.some((m) => m.id === a.mission_id))
+        row.getCell('mission_number').value = {
+          text: a.mission_number,
+          hyperlink: url(a.mission_id),
+        };
       for (const field of dateFields) {
         if (a[field]) {
           row.getCell(field).value = new Date(a[field] + 'T00:00:00Z');
@@ -125,12 +138,31 @@ export async function exportFile(format, project, actions, modules, users) {
       ...users.map((u) => ['Responsable', u.id, u.name, u.email || '']),
     ]);
     directory.columns = [{ width: 20 }, { width: 40 }, { width: 55 }, { width: 40 }];
+    if (missions.length) {
+      const missionSheet = wb.addWorksheet('Missions');
+      missionSheet.addRow(['N° Mission', 'Intitulé', 'Statut', 'Priorité']);
+      for (const m of missions)
+        missionSheet.addRow([
+          { text: m.number, hyperlink: url(m.id) },
+          m.title,
+          m.status,
+          m.priority,
+        ]);
+      missionSheet.columns = [{ width: 28 }, { width: 60 }, { width: 20 }, { width: 18 }];
+    }
     return Buffer.from(await wb.xlsx.writeBuffer());
   }
   if (format !== 'docx') fail(422, 'Format attendu : xlsx ou docx.');
   const para = (text, bold = false) =>
     new Paragraph({
-      children: [new TextRun({ text: String(text), bold, size: 20 })],
+      children: [
+        text && typeof text === 'object' && text.link
+          ? new ExternalHyperlink({
+              link: text.link,
+              children: [new TextRun({ text: text.text, style: 'Hyperlink', size: 20 })],
+            })
+          : new TextRun({ text: String(text), bold, size: 20 }),
+      ],
       spacing: { after: 80 },
     });
   const table = (rows) =>
@@ -167,6 +199,17 @@ export async function exportFile(format, project, actions, modules, users) {
     new Paragraph({ text: 'Références', heading: HeadingLevel.HEADING_1 }),
     ...modules.map((m) => para(`${m.code} — ${m.name} : ${m.id}`)),
     ...users.map((u) => para(`${u.name} : ${u.id}`)),
+    ...missions.map(
+      (m) =>
+        new Paragraph({
+          children: [
+            new ExternalHyperlink({
+              link: url(m.id),
+              children: [new TextRun({ text: `${m.number} — ${m.title}`, style: 'Hyperlink' })],
+            }),
+          ],
+        }),
+    ),
   ];
   for (const a of actions)
     children.push(
@@ -175,11 +218,29 @@ export async function exportFile(format, project, actions, modules, users) {
         heading: HeadingLevel.HEADING_1,
         pageBreakBefore: true,
       }),
+      ...(missions.some((m) => m.id === a.mission_id)
+        ? [
+            new Paragraph({
+              children: [
+                new ExternalHyperlink({
+                  link: url(a.mission_id),
+                  children: [
+                    new TextRun({ text: `Mission : ${a.mission_number}`, style: 'Hyperlink' }),
+                  ],
+                }),
+              ],
+            }),
+          ]
+        : []),
       table([
         ['Champ', 'Valeur'],
         ...Object.entries(columns).map(([key, label], i) => [
           label,
-          dateFields.includes(key) ? frenchDate(a[key]) : String(values(a)[i]),
+          key === 'mission_number' && missions.some((m) => m.id === a.mission_id)
+            ? { text: a.mission_number, link: url(a.mission_id) }
+            : dateFields.includes(key)
+              ? frenchDate(a[key])
+              : String(values(a)[i]),
         ]),
         ['Commentaires (lecture seule)', a.comments || ''],
       ]),

@@ -13,6 +13,9 @@ const date = z
   );
 const optionalDate = z.union([date, z.literal('')]).default('');
 const numeric = z.number().finite().nullable().default(null);
+const missionId = z.string().max(120).default('');
+export const missionStatuses = ['Planifiée', 'En cours', 'Suspendue', 'Terminée', 'Annulée'];
+export const missionPriorities = ['Basse', 'Normale', 'Haute', 'Urgente'];
 export const actionSchema = z
   .object({
     code: short,
@@ -24,6 +27,7 @@ export const actionSchema = z
       .default(''),
     location_other: z.string().trim().max(200).default(''),
     mission_number: z.string().trim().max(120).default(''),
+    mission_id: missionId,
     priority_reference: z.string().trim().max(120).default(''),
     pilot_id: short,
     module_id: short,
@@ -80,6 +84,44 @@ export const actionSchema = z
       issue('unit', 'Précisez une unité pour un objectif mesurable.');
   });
 export const schemas = {
+  missions: z
+    .object({
+      number: short.transform((v) => v.toUpperCase()),
+      title: text,
+      description: optionalText,
+      client_id: short,
+      project_id: missionId,
+      manager_id: short,
+      members: z.array(short).max(500),
+      location: z
+        .string()
+        .refine((v) => !v || locations.includes(v), 'Emplacement invalide.')
+        .default(''),
+      location_other: z.string().trim().max(200).default(''),
+      planned_start: date,
+      planned_end: date,
+      actual_start: optionalDate,
+      actual_end: optionalDate,
+      status: z.enum(missionStatuses),
+      priority: z.enum(missionPriorities),
+      observations: optionalText,
+      archived: z.boolean().default(false),
+    })
+    .strict()
+    .superRefine((v, ctx) => {
+      const issue = (field, message) => ctx.addIssue({ code: 'custom', path: [field], message });
+      if (v.planned_end < v.planned_start) issue('planned_end', 'La fin prévue précède le début.');
+      if (v.actual_end && (!v.actual_start || v.actual_end < v.actual_start))
+        issue('actual_end', 'Renseignez un début réel antérieur ou égal.');
+      if (v.status === 'Terminée' && !v.actual_end)
+        issue('actual_end', 'Une mission terminée nécessite les dates réelles.');
+      if (v.actual_end && v.status !== 'Terminée')
+        issue('status', 'Une fin réelle nécessite le statut Terminée.');
+      if (v.location === 'AUTRE (à préciser)' && !v.location_other)
+        issue('location_other', 'Précisez l’emplacement.');
+      if (v.location !== 'AUTRE (à préciser)' && v.location_other)
+        issue('location_other', 'Choisissez AUTRE pour un emplacement personnalisé.');
+    }),
   clients: z.object({ code: short, name: short, contact: optionalText }).strict(),
   projects: z
     .object({
@@ -91,6 +133,7 @@ export const schemas = {
       planned_start: date,
       planned_end: date,
       members: z.array(short).max(500),
+      mission_id: missionId,
     })
     .strict()
     .refine((v) => v.planned_end >= v.planned_start, {
@@ -104,6 +147,7 @@ export const schemas = {
       description: optionalText,
       project_id: short,
       parent_module_id: z.string().max(120).default(''),
+      mission_id: missionId,
     })
     .strict(),
   actions: actionSchema,

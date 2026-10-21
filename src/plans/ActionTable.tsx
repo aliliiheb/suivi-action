@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { ArrowUpDown, ArrowRight, Search } from 'lucide-react';
 import type { Action, State } from './types';
-import { statuses, dateFR, isLate, projectOf } from './types';
+import { statuses, dateFR, isLate, projectOf, missionNumber } from './types';
+import { MissionLink } from './MissionSelector';
 import locations from '../../server/plans/location-options.json';
 export function Badge({ action }: { action: Action }) {
   return <span className={`badge status-${statuses.indexOf(action.status)}`}>{action.status}</span>;
@@ -53,14 +54,16 @@ export function ActionTable({
         location: a.location,
       };
       return (
-        `${a.code} ${a.description} ${a.objective} ${a.location || ''} ${a.location_other || ''} ${a.mission_number || ''} ${a.priority_reference || ''}`
+        `${a.code} ${a.description} ${a.objective} ${a.location || ''} ${a.location_other || ''} ${missionNumber(state, a)} ${a.priority_reference || ''}`
           .toLocaleLowerCase('fr')
           .includes(search.toLocaleLowerCase('fr')) &&
         Object.entries(values).every(([k, v]) => !filters[k] || filters[k] === v) &&
         ['mission_number', 'priority_reference'].every(
           (key) =>
             !filters[key] ||
-            String(a[key as keyof Action] || '')
+            String(
+              key === 'mission_number' ? missionNumber(state, a) : a[key as keyof Action] || '',
+            )
               .toLocaleLowerCase('fr')
               .includes(filters[key].toLocaleLowerCase('fr')),
         ) &&
@@ -207,11 +210,15 @@ export function ActionTable({
                         {a.location === 'AUTRE (à préciser)' ? a.location_other : a.location}
                       </small>
                     )}
-                    {a.mission_number && <small>Mission : {a.mission_number}</small>}
                     {a.priority_reference && (
                       <small>Réf. prioritaire : {a.priority_reference}</small>
                     )}
                   </button>
+                  {(a.mission_id || a.mission_number) && (
+                    <div className="action-mission">
+                      <MissionLink state={state} entity={a} />
+                    </div>
+                  )}
                 </td>
                 <td>
                   {projectOf(state, a)?.name}

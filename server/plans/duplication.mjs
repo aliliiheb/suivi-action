@@ -39,7 +39,7 @@ async function record(tx, user, kind, source, target, requestId, hash) {
   });
 }
 export async function duplicate(tx, user, kind, sourceId, input) {
-  if (!['projects', 'modules', 'actions'].includes(kind))
+  if (!['projects', 'modules', 'actions', 'missions'].includes(kind))
     fail(404, 'Type de fiche non duplicable.');
   const body = parse(
     z
@@ -80,13 +80,22 @@ export async function duplicate(tx, user, kind, sourceId, input) {
     fail(409, 'La fiche source a changé. Rouvrez le formulaire de duplication.');
   let data = { ...body.data };
   if (kind === 'actions') data = resetExecution(data);
+  if (kind === 'missions')
+    data = {
+      ...data,
+      status: 'Planifiée',
+      actual_start: '',
+      actual_end: '',
+      observations: '',
+      archived: false,
+    };
   const target = await mutate(tx, user, kind, null, data, null, 'create');
   if (kind === 'projects' && body.copy_documents)
     await copyDocuments(tx, user, sourceId, target.id);
   if (kind === 'modules' && body.copy_actions) {
     const destination = state.projects.find((p) => p.id === target.project_id);
     for (const action of state.actions.filter((a) => a.module_id === sourceId)) {
-      const actionData = resetExecution({ ...clean(action), module_id: target.id });
+      const actionData = resetExecution({ ...clean(action), module_id: target.id, mission_id: '' });
       if (
         !state.users.some((u) => u.id === actionData.pilot_id && u.active) ||
         !destination.members.includes(actionData.pilot_id)

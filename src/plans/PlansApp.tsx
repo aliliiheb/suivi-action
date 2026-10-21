@@ -29,11 +29,14 @@ import { ActionDetail } from './ActionDetail';
 import { Transfers } from './Transfers';
 import { ProjectDocuments } from './ProjectDocuments';
 import { CopyProvenance } from './CopyProvenance';
+import { Missions } from './Missions';
+import { MissionLink } from './MissionSelector';
 type Editor = { kind: Kind; value?: Entity; source?: Entity; defaults?: Record<string, unknown> };
 const navigation = [
   ['dashboard', 'Tableau de bord', LayoutDashboard],
   ['clients', 'Clients', Building2],
   ['projects', 'Projets', FolderKanban],
+  ['missions', 'Missions', ListChecks],
   ['actions', 'Toutes les actions', ListChecks],
   ['mine', 'Mes actions', CheckCircle2],
   ['transfers', 'Importation & exportation', ArrowDownUp],
@@ -47,7 +50,12 @@ export function PlansApp() {
   const [state, setState] = useState<State | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState('dashboard');
+  const [page, setPage] = useState(() =>
+    new URLSearchParams(location.search).has('mission') ||
+    new URLSearchParams(location.search).has('missions')
+      ? 'missions'
+      : 'dashboard',
+  );
   const [projectId, setProjectId] = useState('');
   const [actionId, setActionId] = useState('');
   const [editor, setEditor] = useState<Editor | null>(null);
@@ -111,6 +119,7 @@ export function PlansApp() {
     return () => clearInterval(interval);
   }, [authenticated, refresh]);
   const navigate = (next: string) => {
+    window.history.replaceState(null, '', '/plans');
     setPage(next);
     setProjectId('');
     setActionId('');
@@ -150,6 +159,7 @@ export function PlansApp() {
     setPage('actions');
   };
   const openSource = (kind: Kind, id: string) => {
+    window.history.replaceState(null, '', '/plans');
     setActionId('');
     if (kind === 'actions') {
       setActionId(id);
@@ -369,6 +379,8 @@ export function PlansApp() {
               onNew={newProject}
               onAll={() => navigate('actions')}
             />
+          ) : page === 'missions' ? (
+            <Missions state={state} onRefresh={refresh} onOpen={openSource} />
           ) : page === 'transfers' ? (
             <Transfers state={state} columns={session?.columns || {}} onRefresh={refresh} />
           ) : page === 'actions' || page === 'mine' ? (
@@ -413,6 +425,10 @@ export function PlansApp() {
                   {manages(state, selected) && editButtons('projects', selected)}
                 </header>
                 <CopyProvenance kind="projects" id={selected.id} onSource={openSource} />
+                <div className="panel">
+                  <h2>Mission associée</h2>
+                  <MissionLink state={state} entity={selected} />
+                </div>
                 <section className="panel project-meta">
                   <div>
                     <small>Période prévue</small>
@@ -467,6 +483,7 @@ export function PlansApp() {
                           <span className="eyebrow">{m.code}</span>
                           <h3>{m.name}</h3>
                           <p>{m.description}</p>
+                          <MissionLink state={state} entity={m} />
                           <p className="muted">
                             Module principal :{' '}
                             {m.parent_module_id

@@ -400,7 +400,7 @@ test('Excel : pourcentages natifs, dates et commentaires en lecture seule', asyn
   const sheet = wb.getWorksheet('Actions');
   assert.ok(sheet.getCell('H2').value instanceof Date);
   assert.equal(sheet.getCell('H2').numFmt, 'dd/mm/yyyy');
-  assert.equal(sheet.getCell('Y2').value, 'Commentaire exporté');
+  assert.equal(sheet.getCell('Z2').value, 'Commentaire exporté');
   sheet.getCell('M2').value = 0.625;
   sheet.getCell('M2').numFmt = '0.0%';
   const parsed = await readFileRows('natif.xlsx', Buffer.from(await wb.xlsx.writeBuffer()));
@@ -453,7 +453,7 @@ test('Rejet des fichiers non compatibles et migrations versionnées', async () =
   const versions = (await db.query('SELECT version FROM plan_migrations ORDER BY version')).rows;
   assert.deepEqual(
     versions.map((v) => v.version),
-    [1, 2, 3, 4, 5],
+    [1, 2, 3, 4, 5, 6],
   );
 });
 
