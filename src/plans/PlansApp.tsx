@@ -149,6 +149,20 @@ export function PlansApp() {
   if (!state) return <Login error={error} onLogin={initialize} />;
   const selected = state.projects.find((p) => p.id === projectId);
   const action = state.actions.find((a) => a.id === actionId);
+  const canCreateAction = state.modules.some((m) => {
+    const project = state.projects.find((p) => p.id === m.project_id);
+    return project && manages(state, project);
+  });
+  const logout = async () => {
+    try {
+      await api('/logout', 'POST');
+      setEditor(null);
+      setMenu(false);
+      await initialize();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
   const newProject = () =>
     setEditor({
       kind: 'projects',
@@ -290,20 +304,6 @@ export function PlansApp() {
               <strong>{state.user.name}</strong>
               <small>{roles[state.user.role]}</small>
             </div>
-            <button
-              className="icon-button"
-              aria-label="Se déconnecter"
-              onClick={async () => {
-                try {
-                  await api('/logout', 'POST');
-                  await initialize();
-                } catch (e) {
-                  setError((e as Error).message);
-                }
-              }}
-            >
-              <LogOut size={18} />
-            </button>
           </div>
         </div>
       </aside>
@@ -337,6 +337,10 @@ export function PlansApp() {
               onClick={() => void refresh().catch((e) => setError(e.message))}
             >
               <RefreshCw size={17} />
+            </button>
+            <button className="secondary logout-button" onClick={() => void logout()}>
+              <LogOut size={17} aria-hidden="true" />
+              Déconnexion
             </button>
           </div>
         </header>
@@ -395,6 +399,12 @@ export function PlansApp() {
                       : 'Une vue partagée pour faire avancer vos projets.'}
                   </p>
                 </div>
+                {canCreateAction && (
+                  <button className="primary" onClick={() => setEditor({ kind: 'actions' })}>
+                    <Plus size={17} aria-hidden="true" />
+                    Ajouter une action
+                  </button>
+                )}
               </header>
               <ActionTable
                 state={state}

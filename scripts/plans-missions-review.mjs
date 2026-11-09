@@ -224,6 +224,30 @@ try {
     [],
     'Dashboard accessible',
   );
+  await page.setViewportSize({ width: 1366, height: 600 });
+  await page.getByRole('button', { name: 'Toutes les actions', exact: true }).click();
+  await page.getByRole('button', { name: 'Ajouter une action', exact: true }).click();
+  const actionForm = page.getByRole('dialog', { name: 'Créer une action' });
+  await expect(actionForm.getByLabel('Module', { exact: true })).toBeEnabled();
+  await actionForm.getByLabel('Code', { exact: true }).fill('QA-NAV-001');
+  await actionForm.getByLabel('Description de l’action').fill('Action créée depuis la liste globale');
+  await actionForm.getByLabel('Objectif attendu').fill('Vérifier la création directe');
+  await actionForm.getByLabel('Avancement (%)').fill('0');
+  await actionForm.getByLabel('Début prévu').fill('2026-01-01');
+  await actionForm.getByLabel('Fin prévue').fill('2026-12-31');
+  await actionForm.getByRole('button', { name: 'Enregistrer', exact: true }).click();
+  await expect(actionForm).not.toBeVisible();
+  await expect(page.getByRole('button', { name: /Action créée depuis la liste globale/ })).toBeVisible();
+  for (const viewport of [{ width: 1366, height: 600 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    const logoutButton = page.getByRole('button', { name: 'Déconnexion', exact: true });
+    await expect(logoutButton).toBeInViewport();
+    await expect(page.getByRole('button', { name: 'Ajouter une action', exact: true })).toBeVisible();
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    await page.screenshot({ path: path.join(output, `navigation-${viewport.width}.png`), fullPage: true });
+  }
+  await page.getByRole('button', { name: 'Déconnexion', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Accéder à mon espace' })).toBeVisible();
   assert.deepEqual(errors, []);
   console.log(
     'Missions : création imbriquée, annulation sans perte, sélection, navigation directe et précédente/suivante, associations/réaffectations, documents, commentaires, renommage indépendant, copie, archivage, recherche et trois tailles écran validés. Axe AA : aucun défaut.',

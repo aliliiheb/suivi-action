@@ -45,7 +45,10 @@ export function EntityEditor({ kind, value, source, defaults, state, onClose, on
   );
   const [parentId, setParentId] = useState(String(data.parent_module_id || ''));
   const [selectedModule, setSelectedModule] = useState(
-    String(data.module_id || state.modules[0]?.id || ''),
+    String(data.module_id || state.modules.find((m) =>
+      state.user.role === 'ADMIN' ||
+      state.projects.find((p) => p.id === m.project_id)?.manager_id === state.user.id,
+    )?.id || ''),
   );
   const parentOptions = state.modules.filter((candidate) => {
     if (candidate.project_id !== selectedProject) return false;
