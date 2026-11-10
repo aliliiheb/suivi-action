@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import locations from './location-options.json' with { type: 'json' };
+import moduleReferences from './module-reference-options.json' with { type: 'json' };
 export const statuses = ['À faire', 'En cours', 'Terminée', 'Bloquée'];
 const text = z.string().trim().min(1, 'Champ obligatoire').max(2000);
 const short = z.string().trim().min(1, 'Champ obligatoire').max(120);
@@ -147,6 +148,7 @@ export const schemas = {
       description: optionalText,
       project_id: short,
       parent_module_id: z.string().max(120).default(''),
+      module_reference: z.enum(['', ...moduleReferences]).default(''),
       mission_id: missionId,
     })
     .strict(),

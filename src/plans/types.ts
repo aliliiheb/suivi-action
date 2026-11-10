@@ -25,6 +25,7 @@ export type Project = {
 export type Module = {
   mission_id?: string;
   parent_module_id?: string;
+  module_reference?: string;
   id: string;
   version: number;
   code: string;

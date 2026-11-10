@@ -133,7 +133,7 @@ export async function mutate(tx, user, kind, id, input, version, operation = 'up
           'priority_reference',
         ]
       : kind === 'modules'
-        ? ['parent_module_id', 'mission_id']
+        ? ['parent_module_id', 'mission_id', 'module_reference']
         : kind === 'projects'
           ? ['mission_id']
           : [];

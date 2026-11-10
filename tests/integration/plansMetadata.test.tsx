@@ -172,7 +172,7 @@ describe('Nouveaux champs FMS', () => {
         onSaved={async () => {}}
       />,
     );
-    const select = screen.getByLabelText('Référence Module Principal');
+    const select = screen.getByLabelText('Module de rattachement');
     expect(
       within(select)
         .getAllByRole('option')
@@ -243,9 +243,9 @@ describe('Nouveaux champs FMS', () => {
     );
     expect(screen.getByLabelText('Projet')).not.toBeDisabled();
     fireEvent.change(screen.getByLabelText('Projet'), { target: { value: 'p2' } });
-    expect(screen.getByLabelText('Référence Module Principal')).toHaveValue('');
+    expect(screen.getByLabelText('Module de rattachement')).toHaveValue('');
     expect(
-      within(screen.getByLabelText('Référence Module Principal')).getAllByRole('option'),
+      within(screen.getByLabelText('Module de rattachement')).getAllByRole('option'),
     ).toHaveLength(1);
     expect(screen.getByLabelText(/Copier également les actions/)).not.toBeChecked();
   });

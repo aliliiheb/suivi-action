@@ -5,6 +5,7 @@ import { api } from './api';
 import type { State, Kind, Entity, Action } from './types';
 import { statuses, roles } from './types';
 import locations from '../../server/plans/location-options.json';
+import moduleReferences from '../../server/plans/module-reference-options.json';
 import { MissionSelector } from './MissionSelector';
 type Props = {
   kind: Kind;
@@ -345,6 +346,15 @@ export function EntityEditor({ kind, value, source, defaults, state, onClose, on
               />
               <label className="wide">
                 Référence Module Principal
+                <select name="module_reference" defaultValue={String(data.module_reference ?? '')}>
+                  <option value="">Aucune</option>
+                  {moduleReferences.map((reference) => (
+                    <option key={reference}>{reference}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="wide">
+                Module de rattachement
                 <select
                   name="parent_module_id"
                   value={parentId}

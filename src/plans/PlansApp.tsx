@@ -494,8 +494,11 @@ export function PlansApp() {
                           <h3>{m.name}</h3>
                           <p>{m.description}</p>
                           <MissionLink state={state} entity={m} />
+                          {m.module_reference && (
+                            <p className="muted">Référence Module Principal : {m.module_reference}</p>
+                          )}
                           <p className="muted">
-                            Module principal :{' '}
+                            Module de rattachement :{' '}
                             {m.parent_module_id
                               ? state.modules
                                   .filter((parent) => parent.id === m.parent_module_id)
